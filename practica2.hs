@@ -1,11 +1,21 @@
+--Dar tipo a las funciones
+first::(a, b) -> a
 first (x,y) = x
+
+swap::(a, b) -> (b, a)
 swap (x, y) = (y, x)
+
+uflip::((b, a)->c)-> (a, b) -> c
 uflip f = g where g p = f (swap p)
+
+twice::(a->a)->(a->a)
 twice f = g where g x = f (f x)
-doble  x = x + x
+
+doble:: Int-> Int
+doble x = x + x
+
 appDup f = g  where g x = f (x, x)
 appFork (f, g) = h  where h x = (f x, g x)
-
 appPar (f, g) = h  where h (x, y) = (f x, g y)
 appDist f = g  where g (x, y) = (f x, f y)
 subst f = h  where h g = k    where k x = (f x) (g x)
