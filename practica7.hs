@@ -247,3 +247,84 @@ largoDePlanilla (Registro "Alonzo" (Registro "Alan" (Registro "Edsger" Fin))) + 
 1 + 1 + 1 +  largoDePlanilla p
 
 -}
+
+
+---------SECCION III
+data Dungeon a = Habitacion a | Pasaje (Maybe a) (Dungeon a) | Bifurcacion (Maybe a) (Dungeon a) (Dungeon a)
+
+cantidadDeBifurcaciones::Dungeon a -> Int
+cantidadDeBifurcaciones (Habitacion e) = 0
+cantidadDeBifurcaciones (Pasaje m d) =  cantidadDeBifurcaciones d
+cantidadDeBifurcaciones (Bifurcacion m d1 d2) = 1 + cantidadDeBifurcaciones d1 + cantidadDeBifurcaciones d2
+
+cantidadDePuntosInteresantes::Dungeon a -> Int
+cantidadDeBifurcaciones (Habitacion e) = 0
+cantidadDeBifurcaciones (Pasaje m d) =  unoSiEsInteresante m + cantidadDeBifurcaciones d
+cantidadDeBifurcaciones (Bifurcacion m d1 d2) = unoSiEsInteresante m + cantidadDeBifurcaciones d1 + cantidadDeBifurcaciones d2
+
+unoSiEsInteresante::Maybe a -> Int
+unoSiEsInteresante (Just _) = 1
+unoSiEsInteresante _ = 0
+
+cantidadDePuntosVacios::Dungeon a -> Int
+cantidadDePuntosVacios (Habitacion e) = 0
+cantidadDePuntosVacios (Pasaje m d) =  unoSiEsVacio m + cantidadDePuntosVacios d
+cantidadDePuntosVacios (Bifurcacion m d1 d2) = unoSiEsVacio m + cantidadDePuntosVacios d1 + cantidadDePuntosVacios d2
+
+unoSiEsVacio::Maybe a -> Int
+unoSiEsVacio Nothing = 1
+unoSiEsVacio _ = 0
+
+cantidadDePuntosCon::a -> Dungeon a ->Int
+cantidadDePuntosCon e (Habitacion x) = unoSiEs e m
+cantidadDePuntosCon e (Pasaje m d) =  unoSiEs e m + cantidadDePuntosCon e d
+cantidadDePuntosCon e (Bifurcacion m d1 d2) = unoSiEs e m + cantidadDePuntosCon e d1 + cantidadDePuntosCon e d2
+
+unoSiEs::a-> Maybe a -> Int
+unoSiEs e (Just x) = if x==e then 1 else 0
+unoSiEs e _ = 0
+
+esLineal::Dungeon a -> Bool
+esLineal (Habitacion e) = True
+esLineal (Pasaje m d) = esLineal d
+esLineal (Bifurcacion m d1 d2) = False && esLineal d1 && esLineal d2  -- Directamente False pero usar recursión
+
+
+------Extra practica 7
+data Camino = Izq Camino | Der Camino | Final
+data Objeto = Tesoro | Chatarra
+data Cofre = Cofre Objeto
+data Mapa = FinMapa Cofre | Bifurcacion Cofre Mapa Mapa
+
+--Ej1)
+todosCumplen :: (Objeto -> Bool) -> Mapa -> Bool
+todosCumplen p (FinMapa c) = p (objeto c)
+todosCumplen p (Bifurcacion c m1 m2) = p (objeto c) &&
+  todosCumplen p m1 &&
+  todosCumplen p m2
+
+objeto::Cofre-> Objeto
+objeto (Cofre o) = o
+
+--Ej2)
+hayTesoroEn :: Camino -> Mapa -> Bool
+hayTesoroEn Final (FinMapa c) = esTesoro (objeto c)
+hayTesoroEn Final (Bifurcacion c m1 m2) = esTesoro (objeto c)
+hayTesoroEn (Izq c) (FinMapa co) = False -- si es FinMapa y tengo Iqz directamente puedo dar False
+hayTesoroEn (Izq c) (Bifurcacion co m1 m2) = hayTesoroEn c m1
+hayTesoroEn (Der c) (FinMapa co) = False -- si es FinMapa y tengo Der directamente puedo dar False
+hayTesoroEn (Der c) (Bifurcacion co m1 m2) = hayTesoroEn c m2 
+
+esTesoro::Objeto-> Bool
+esTesoro Tesoro = True
+esTesoro _ = False
+
+--Ej3)
+
+algunoDelCaminoCumple :: (Objeto -> Bool) -> Camino -> Mapa -> Bool
+algunoDelCaminoCumple p Final (FinMapa c) = p (objeto c)
+algunoDelCaminoCumple p Final (Bifurcacion c m1 m2) = p (objeto c)
+algunoDelCaminoCumple p (Izq c) (FinMapa c) = False -- si es FinMapa y tengo Iqz directamente puedo dar False
+algunoDelCaminoCumple p (Izq c) (Bifurcacion c m1 m2) = algunoDelCaminoCumple p c m1
+algunoDelCaminoCumple p (Der c) (FinMapa c) = False -- si es FinMapa y tengo Der directamente puedo dar False
+algunoDelCaminoCumple p (Der c) (Bifurcacion c m1 m2) = algunoDelCaminoCumple p c m2 
