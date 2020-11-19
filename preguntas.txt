@@ -1,0 +1,11 @@
+Preguntas
+
+Ej 2.i no puedo solucionar con lema, me queda como que siempre quiero resolver el mismo lema.
+
+(++) ys [x]
+= notación infija? Es correcto decir asi? 
+ys ++ [x]
+
+Sección II 
+Ej 1.b.iii no veo como crear el lema
+Ej 3.b.ii y 3.b.iii

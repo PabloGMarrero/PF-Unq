@@ -973,3 +973,29 @@ Demostración
 	
 
 -}
+
+--Seccion III
+
+--Ej 1
+
+data ExpA =Cte Int | Suma ExpA ExpA | Prod ExpA ExpA deriving Show 
+
+evalExpA::ExpA->Int
+evalExpA (Cte n) = n
+evalExpA (Suma e1 e2) = evalExpA e1 + evalExpA e2
+evalExpA (Prod e1 e2) = evalExpA e1 * evalExpA e2
+
+simplificarExpA::ExpA->ExpA
+simplificarExpA (Cte n) = Cte n
+simplificarExpA (Suma e1 e2) = simpSumaExpA (simplificarExpA e1) (simplificarExpA e2)
+simplificarExpA (Prod e1 e2) = simpProdExpA (simplificarExpA e1) (simplificarExpA e2)
+
+simpSumaExpA::ExpA->ExpA-> ExpA
+simpSumaExpA (Cte 0) e2 = e2
+simpSumaExpA e1 (Cte 0) = e1
+
+simpProdExpA::ExpA->ExpA-> ExpA
+simpProdExpA (Cte 0) e2 = (Cte 0)
+simpProdExpA (Cte 1) e2 = e2
+simpProdExpA e1 (Cte 0) = (Cte 0)
+simpProdExpA e1 (Cte 1) = e1

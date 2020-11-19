@@ -1,0 +1,359 @@
+data Laberinto a = Salida | Celda a | Pasillo a (Laberinto a) | Bifurcacion (Laberinto a ) (Laberinto a) deriving Show
+
+haySalida::Laberinto a -> Bool
+haySalida Salida = True
+haySalida (Celda e) = False
+haySalida (Pasillo e l) = haySalida l
+haySalida (Bifurcacion l1 l2) = haySalida l1 || haySalida l2
+
+normSalidas::Laberinto a -> Laberinto a 
+normSalidas Salida = Salida
+normSalidas (Celda e) = Celda e
+normSalidas (Pasillo e l) = Pasillo e (normSalidas l)
+normSalidas (Bifurcacion l1 l2)= normBifuracionLab (normSalidas l1) (normSalidas l2)
+
+normBifuracionLab:: Laberinto a -> Laberinto a -> Laberinto a
+normBifuracionLab Salida Salida = Salida
+normBifuracionLab l1 l2 = Bifurcacion l1 l2
+
+
+Demostracion
+
+¿haySalida . normSalidas = haySalida?
+Por ppio de extensionalidad sea un l un Laberinto a cualquiera
+para todo l. ¿(haySalida . normSalidas) l = haySalida l?
+
+Por def (.)
+para todo l. ¿haySalida (normSalidas l) = haySalida l?
+
+Por ppio de inducción en la estructura de l
+- Caso base 1 l = Salida
+	¿haySalida (normSalidas Salida) = haySalida Salida?
+- Caso base 2 l = Celda e
+	¿haySalida (normSalidas (Celda e)) = haySalida (Celda e)?
+- Caso ind 1 l = Pasillo e l'
+	TI:¿haySalida (normSalidas (Pasillo e l')) = haySalida (Pasillo e l')?
+	HI:¡haySalida (normSalidas l') = haySalida l'!
+- Caso ind 2 l = Bifurcacion l1 l2
+	TI:¿haySalida (normSalidas (Bifurcacion l1 l2)) = haySalida (Bifurcacion l1 l2)?
+	HI:¡haySalida (normSalidas l1) = haySalida l1!
+	HI:¡haySalida (normSalidas l2) = haySalida l2!
+	
+Demostración
+
+- Caso base 1
+	LADO IZQ
+	haySalida (normSalidas Salida) 
+	= normSalidas.1
+	haySalida Salida
+	
+	LLEGUÉ
+	
+- Caso base 2
+	LADO IZQ
+	haySalida (normSalidas (Celda e)) 
+	= normSalidas.2
+	haySalida (Celda e)
+	
+	LLEGUÉ
+
+- Caso ind 1
+	LADO IZQ
+	haySalida (normSalidas (Pasillo e l')) 
+	= normSalidas.3
+	haySalida (Pasillo e (normSalidas l'))?
+	=haySalida.3
+	Pasillo e (haySalida (normSalidas l'))
+	
+	LADO DER
+	haySalida (Pasillo e l')?
+	= haySalida.3
+	Pasillo e (haySalida l')
+	= HI
+	Pasillo e (haySalida (normSalidas l'))
+
+- Caso ind 2 l = Bifurcacion l1 l2
+	LADO IZQ
+	haySalida (normSalidas (Bifurcacion l1 l2)) 
+	= normSalidas.4
+	haySalida (normBifuracionLab (normSalidas l1) (normSalidas l2))
+	= lema haySalida-bif
+	haySalida (normSalidas l1) || haySalida (normSalidas l2)
+
+	
+	LADO DER
+	haySalida (Bifurcacion l1 l2)
+	=haySalida.4
+	haySalida l1 || haySalida l2
+	= HI1 
+	haySalida (normSalidas l1) || haySalida l2
+	?Hi2
+	haySalida (normSalidas l1) || haySalida (normSalidas l2)
+
+	Lema haySalida-bif
+	haySalida (normBifuracionLab l1' l2') = haySalida l1' || haySalida l2'
+	
+		- Caso l1' = Salida y  l2' = Salida
+			LADO IZQ		
+			haySalida (normBifuracionLab Salida Salida)
+			=normBifuracionLab.1
+			haySalida Salida
+			= haySalida.1
+			True
+			
+			LADO DER
+			haySalida Salida || haySalida Salida
+			=haySalida.1 dos veces
+			True || True
+			= por ||
+			True
+			
+			LLEGUÉ
+			
+		- Caso l1'= lab1 disinto a Salida  y l2' = lab2 distinto a Salida
+			LADO IZQ
+			haySalida (normBifuracionLab lab1 lab2)
+			= normBifuracionLab.2
+			haySalida (Bifurcacion lab1 lab2)
+			=haySalida.4
+			haySalida lab1 || haySalida lab2
+			
+			LLEGUÉ
+			
+
+		
+data BoolExp = BBop BBO BoolExp BoolExp | BTrue | BFalse
+data BBO = BAnd | BOr
+
+evalBE :: BoolExp -> Bool
+evalBE (BBop bb be1 be2) = evalBBop bb (evalBE be1) (evalBE be2)
+evalBE BTrue = True
+evalBE BFalse = False
+
+evalBBop:: BBO -> Bool -> Bool-> Bool
+evalBBop BAnd = (&&)
+evalBBop BOr  = (||)
+
+haySalidaBE :: Laberinto a -> BoolExp
+haySalidaBE Salida = BTrue
+haySalidaBE (Celda e) = BFalse
+haySalidaBE (Pasillo e l) = haySalidaBE l
+haySalidaBE (Bifurcacion l1 l2) = BBop BOr (haySalidaBE l1) (haySalidaBE l2)
+
+
+¿evalBE . haySalidaBE = haySalida?
+Por ppio de extensionalidad sea un l un Laberinto a cualquiera
+para todo l. ¿(evalBE . haySalidaBE) l = haySalida l?
+
+Por def (.)
+para todo l. ¿evalBE (haySalidaBE l) = haySalida l?
+
+Por ppio de inducción en la estructura de l
+- Caso base 1 l = Salida
+	¿evalBE (haySalidaBE Salida) = haySalida Salida?
+- Caso base 2 l = Celda e
+	¿evalBE (haySalidaBE (Celda e)) = haySalida (Celda e)?
+- Caso ind 1 l = Pasillo e l'
+	TI:¿evalBE (haySalidaBE (Pasillo e l')) = haySalida (Pasillo e l')?
+	HI:¡evalBE (haySalidaBE l') = haySalida l'!
+- Caso ind 2 l = Bifurcacion l1 l2
+	TI:¿evalBE (haySalidaBE (Bifurcacion l1 l2)) = haySalida (Bifurcacion l1 l2)?
+	HI1:¡evalBE (haySalidaBE l1) = haySalida l1!
+	HI2:¡evalBE (haySalidaBE l2) = haySalida l2!
+
+Demostracion
+
+- Caso base 1
+	LADO IZQ
+	evalBE (haySalidaBE Salida) 
+	= haySalidaBE.1 
+	evalBE BTrue
+	= evalBE.2
+	True
+	=haySalida.1
+	haySalida Salida
+	
+	LLEGUÉ
+	
+- Caso base 2
+	LADO IZQ
+	evalBE (haySalidaBE (Celda e)) 
+	= haySalidaBE.2
+	evalBE BFalse
+	=evalBE.3
+	False
+	=haySalida.2
+	haySalida (Celda e)
+
+	LLEGUÉ
+
+- Caso ind 1
+	LADO IZQ
+	evalBE (haySalidaBE (Pasillo e l')) 
+	= haySalidaBE.3
+	evalBE (haySalidaBE l')
+	= HI
+	haySalida l'
+	= haySalida.3
+	haySalida (Pasillo e l')
+	
+	LLEGUÉ
+	
+- Caso ind 2
+	LADO IZQ
+	evalBE (haySalidaBE (Bifurcacion l1 l2)) 
+	= haySalidaBE.4
+	evalBE (BBop BOr (haySalidaBE l1) (haySalidaBE l2))
+	=evalBE.1
+	evalBBop BOr (evalBE (haySalidaBE l1)) (evalBE (haySalidaBE l2))
+	=evalBBop.2
+	(||) (evalBE (haySalidaBE l1)) (evalBE (haySalidaBE l2))
+	= HI1
+	(||) (haySalida l1) (evalBE (haySalidaBE l2))
+	= HI2
+	(||) (haySalida l1) (haySalida l2)
+	= por sección operadores
+	haySalida l1 || haySalida l2
+		
+	
+	LADO DER
+	haySalida (Bifurcacion l1 l2)
+	=
+	haySalida l1 || haySalida l2
+	
+	LLEGUÉ
+	
+delta :: Bool -> Int
+delta True  = 1
+delta False = 0
+
+
+cantQueCumplen :: (a -> Bool) -> Laberinto a -> Int
+cantQueCumplen p Salida = 0
+cantQueCumplen p (Celda e) = delta (p e)
+cantQueCumplen p (Pasillo e l) = delta (p e) + cantQueCumplen p l
+cantQueCumplen p (Bifurcacion l1 l2) = cantQueCumplen p l1 + cantQueCumplen p l2
+
+objs2Int :: (a -> Int) -> Laberinto a -> Laberinto Int
+objs2Int p Salida = Salida
+objs2Int p (Celda e) = Celda (p e)
+objs2Int p (Pasillo e l) = Pasillo (p e) (objs2Int p l)
+objs2Int p (Bifurcacion l1 l2) = Bifurcacion (objs2Int p l1) (objs2Int p l2)
+
+losQueCumplenPorDistancia :: (a -> Bool) -> Laberinto a -> [[a]]
+losQueCumplenPorDistancia p Salida = []
+losQueCumplenPorDistancia p (Celda e) = if p e then [[e]] else []
+losQueCumplenPorDistancia p (Pasillo e l) =  if p e then [e]: losQueCumplenPorDistancia p l else losQueCumplenPorDistancia p l
+losQueCumplenPorDistancia p (Bifurcacion l1 l2) = concatPerLevel losQueCumplenPorDistancia p l1 ++ losQueCumplenPorDistancia p l2
+
+concatPerLevel::
+concatPerLevel [] yss = yss
+concatPerLevel xss [] = xss
+concatPerLevel (xs:xss) (ys:yss) = xs++ys : concatPerLevel xss:yss
+
+sumObj :: Laberinto Int -> Int
+sumObj Salida                  = 0
+sumObj (Celda n)               = n
+sumObj (Pasillo x lab)         = x + sumObj lab
+sumObj (Bifurcacion lab1 lab2) = sumObj lab1 + sumObj lab2
+
+demostrar la siguiente propiedad 
+
+¿cantQueCumplen (const True) = sumObj . objs2Int (const 1)?
+	   
+Por ppio de extensionalidad sea l un Laberinto a cualquiera
+para todo l. ¿cantQueCumplen (const True) l = (sumObj . objs2Int (const 1)) l?
+
+Por def (.)
+¿cantQueCumplen (const True) l = sumObj (objs2Int (const 1) l)?
+
+
+Por ppio de inducción en la estructura de l
+- Caso base 1 l = Salida
+	¿cantQueCumplen (const True) Salida = sumObj (objs2Int (const 1) Salida)?
+- Caso base 2 l = Celda e
+	¿cantQueCumplen (const True) (Celda e) = sumObj (objs2Int (const 1) (Celda e))?
+- Caso ind 1 l = Pasillo e l'
+	TI:¿cantQueCumplen (const True) (Pasillo e l') = sumObj (objs2Int (const 1) (Pasillo e l'))?
+	HI:¡cantQueCumplen (const True) l' = sumObj (objs2Int (const 1) l')!
+- Caso ind 2 l = Bifurcacion l1 l2
+	TI: ¿cantQueCumplen (const True) (Bifurcacion l1 l2) = sumObj (objs2Int (const 1) (Bifurcacion l1 l2))?
+	HI1:¡cantQueCumplen (const True) l1 = sumObj (objs2Int (const 1) l1)!
+	HI2:¡cantQueCumplen (const True) l2 = sumObj (objs2Int (const 1) l2)!
+	
+Demostración
+
+- Caso base 1
+	LADO IZQ
+	cantQueCumplen (const True) Salida 
+	= cantQueCumplen.1
+	0
+	= sumObj.1
+	sumObj Salida
+	
+	LADO DER
+	sumObj (objs2Int (const 1) Salida)
+	=objs2Int.1
+	sumObj Salida
+	
+- Caso base 2
+	LADO IZQ
+	cantQueCumplen (const True) (Celda e) 
+	= cantQueCumplen.2
+	delta (const True e)
+	= def const
+	delta True
+	= delta.1
+	1	
+	
+	LADO DER
+	sumObj (objs2Int (const 1) (Celda e))
+	= objs2Int.2
+	sumObj (Celda (const 1 e))
+	= def const
+	sumObj (Celda 1)
+	= sumObj.2 
+	1
+	
+- Caso ind 1
+	LADO IZQ
+	cantQueCumplen (const True) (Pasillo e l') 
+	=cantQueCumplen.3
+	delta (const True e) + cantQueCumplen (const True) l'
+	=def const
+	delta True + cantQueCumplen (const True) l'
+	= delta.1
+	1 + cantQueCumplen (const True) l'
+	
+	
+	LADO DER
+	sumObj (objs2Int (const 1) (Pasillo e l'))
+	=objs2Int.3
+	sumObj (Pasillo (const 1 e) (objs2Int (const 1) l'))
+	= const.
+	sumObj (Pasillo 1 (objs2Int (const 1) l'))
+	= sumObj.3
+	1 + sumObj (objs2Int (const 1) l')
+	= HI
+	1 + cantQueCumplen (const True) l' 
+	
+	LLEGUÉ
+	
+- Caso ind 2
+	LADO IZQ
+	cantQueCumplen (const True) (Bifurcacion l1 l2) 
+	= cantQueCumplen.4
+	cantQueCumplen (const True) l1 + cantQueCumplen (const True) l2
+	
+	LADO DER
+	sumObj (objs2Int (const 1) (Bifurcacion l1 l2))
+	= objs2Int.4
+	sumObj (Bifurcacion (objs2Int (const 1) l1) (objs2Int (const 1) l2))
+	= sumObj.4
+	sumObj (objs2Int (const 1) l1) + sumObj (objs2Int (const 1) l2))
+	= HI1
+	cantQueCumplen (const True) l1 + sumObj (objs2Int (const 1) l2))
+	= HI2
+	cantQueCumplen (const True) l1 + cantQueCumplen (const True) l2
+	
+	LLEGUÉ

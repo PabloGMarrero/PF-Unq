@@ -1,0 +1,213 @@
+PREGUNTA 1
+--------------------------
+heightT::Tree a->Int
+heightT EmptyT = 0
+heightT (NodeT e t1 t2) = 1 + max (heightT t1) (heightT t2)
+
+ramaMasLarga::Tree a->[a]
+ramaMasLarga EmptyT = []
+ramaMasLarga (NodeT e t1 t2) = e: listaMax (ramaMasLarga t1) (ramaMasLarga t2)
+
+listaMax::[a]->[a]->[a]
+listaMax xs ys = if length xs >= length ys then xs else ys
+
+===============================
+Prop: heightT ​=​ length . ramaMasLarga
+===============================
+Dem: por ppio de ext.
+   ¿para todo t. heightT ​t =​ (length . ramaMasLarga) t?
+ Por definición de composición, es equivalente a
+   ¿para todo t. heightT ​t =​ length (ramaMasLarga t)?
+Sea t un Tree a. Por inducción en la estructura de t1
+
+Caso base) ¿heightT ​EmptyT =​ length (ramaMasLarga EmptyT)?
+Caso inductivo) 
+   HI1) ¡heightT ​t1 =​ length (ramaMasLarga t1)!
+   HI1) ¡heightT ​t2 =​ length (ramaMasLarga t2)!
+   TI) ¿heightT ​(NodeT x t1 t2) =​ length (ramaMasLarga (NodeT x t1 t2))?
+-- QUEDAN PARA EL LEMA
+--   Subcaso 1) length (ramaMasLarga t1) > length (ramaMasLarga t2)
+--   Subcaso 2) length (ramaMasLarga t1) <= length (ramaMasLarga t2)
+
+...
+Caso ind, subcaso 1) 
+   LADO IZQ)
+   heightT ​(NodeT x t1 t2)
+  =    (heightT.2)
+   1 + max (heightT t1) (heightT t2)
+
+   LADO DER)
+   length (ramaMasLarga (NodeT x t1 t2))
+  =    (ramaMasLarga.2)
+   length (x : listaMax (ramaMasLarga t1) (ramaMasLarga t2))
+  =    (length.2)
+   1 + length (listaMax (ramaMasLarga t1) (ramaMasLarga t2))
+  =    (LEMA)
+   1 + max (length (ramaMasLarga t1)) (length (ramaMasLarga t2))
+  =    (HI1, HI2)
+   1 + max (heightT t1) (heightT t2)
+...
+===============================
+LEMA: para todo xs. para todo ys. 
+       max (length xs) (length ys) = length (listaMax xs ys)
+===============================
+Dem: Sean xs e ys listas cualesquiera
+   Caso 1) length xs > length ys
+   Caso 2) length xs <= length ys
+
+Caso 1)
+  LADO IZQ)
+    max (length xs) (length ys)
+  =      (hipótesis del caso)
+    length xs  
+  
+  LADO DER)
+    length (listaMax xs ys)
+  =       (listaMax)  
+    length (if length xs >= length ys then xs else ys)
+  =       (hipótesis del caso, y reducción del if)
+    length xs
+                                     Vale el caso
+...
+===============================
+
+
+
+Pregunta 2
+---------------------------------
+data ExpA = Cte Int | Suma ExpA ExpA | Prod ExpA ExpA
+
+evalExpA :: ExpA -> Int
+evalExpA (Cte n)      = n
+evalExpA (Suma e1 e2) = evalExpA e1 + evalExpA e2
+evalExpA (Prod e1 e2) = evalExpA e1 * evalExpA e2
+
+simplificarExpA :: ExpA -> ExpA
+simplificarExpA (Cte n)      = Cte n
+simplificarExpA (Suma e1 e2) = rearmarSuma (simplificarExpA e1) (simplificarExpA e2)
+simplificarExpA (Prod e1 e2) = rearmarProd (simplificarExpA e1) (simplificarExpA e2)
+
+rearmarSuma :: ExpA -> ExpA -> ExpA
+rearmarSuma (Cte 0) e2      = e2
+rearmarSuma e1      (Cte 0) = e1
+rearmarSuma e1      e2      = Suma e1 e2
+
+rearmarProd ...
+
+===============================
+Prop: evalExpA . simplificarExpA = evalExpA
+===============================
+Dem: por ppio de ext.
+   ¿para todo e. (evalExpA . simplificarExpA) e = evalExpA e?
+ Por definición de composición es equivalente a
+   ¿para todo e. evalExpA (simplificarExpA e) = evalExpA e?
+
+Sea e una ExpA cualquiera. Por ppio de inducción en la estructura de e
+
+Caso base) ¿evalExpA (simplificarExpA (Cte n)) = evalExpA (Cte n)?
+Caso ind.1) 
+  HI1.1) ¡evalExpA (simplificarExpA e1) = evalExpA e1!
+  HI1.2) ¡evalExpA (simplificarExpA e2) = evalExpA e2!
+  TI1) ¿evalExpA (simplificarExpA (Suma e1 e2)) = evalExpA (Suma e1 e2)?
+Caso ind.2)
+  HI2.1) ¡evalExpA (simplificarExpA e1) = evalExpA e1!
+  HI2.2) ¡evalExpA (simplificarExpA e2) = evalExpA e2!
+  TI2) ¿evalExpA (simplificarExpA (Prod e1 e2)) = evalExpA (Prod e1 e2)?
+  
+...
+===============================
+DISGRESIÓN SOBRE FACTORIZACIÓN
+===============================
+La factorización de la composición se puede ver como equivalente a otras factorizaciones...
+En programación funcional:
+     if cond then 10*x + 33 else 10*x + 42
+  =    ("factor común" para el if)
+     10*x + if cond then 33 else 42
+
+En matemáticas:
+     (2*x^2 + 4*x + 6)
+   =
+     (2*x^2 + 2*2*x + 2*3)
+   =  (factor común)
+     2*(x^2 + 2*x + 3)     
+===============================
+all p [] = True
+all p (x:xs) = p x && all p xs
+
+reverse [] = []
+reverse (x:xs) = reverse xs ++ [x]
+===============================
+Prop: para todo p. para todo xs. para todo ys.
+        all p (xs++ys) = all p (reverse xs) && all p (reverse ys)     
+===============================
+Dem: Por LEMA.2, 2 veces, es equivalente ver que
+    ¿para todo p. para todo xs. para todo ys.
+       all p (xs++ys) = all p xs && all p ys?
+    Que por LEMA.1 queda demostrado.
+===============================
+LEMA.1: para todo p. para todo xs. para todo ys.
+       all p (xs++ys) = all p xs && all p ys
+===============================
+Dem: Sean p, xs e ys elementos cualesquiera de los tipos correspondientes
+     Por ppio de inducción en la estructura de xs
+
+Caso base) ¿all p ([]++ys) = all p [] && all p ys?
+Caso ind.)
+   HI) ¡all p (xs'++ys) = all p xs' && all p ys!
+   TI) ¿all p ((x:xs')++ys) = all p (x:xs') && all p ys?
+
+...
+===============================
+LEMA.2: para todo p. all p = all p . reverse
+===============================
+Dem: por principio de ext. 
+   para todo p. para todo xs. 
+        all p xs = all p (reverse xs)      
+Sean p y xs. Por ppio de inducción en xs
+
+   Caso base) ¿all p [] = all p (reverse [])?
+   Caso ind.) 
+      HI) ¡all p xs' = all p (reverse xs')!
+      TI) ¿all p (x:xs') = all p (reverse (x:xs'))?
+      
+  ...
+===============================
+
+
+PROP: reverse . inOrder = inOrder . mirrorT
+Dem: ...
+
+Caso Inductivo) t = NodeT a t1 t2
+   HI)reverse (inOrder t1)= inOrder (mirrorT t1)
+   HI)reverse (inOrder t2)= inOrder (mirrorT t2)
+   TI)reverse (inOrder NodeT a t1 t2)= inOrder (mirrorT NodeT a t1 t2)
+
+Lado Izq)
+reverse (inOrder NodeT a t1 t2)
+=   def inOrder
+reverse (inOrder t1 ++ [x] ++ inOrder t2)
+=   HI
+inOrder (mirrorT t2) ++ [x] ++ inOrder (mirrorT t1)
+=   def inOrder
+inOrder (NodeT x (mirrorT t2) (mirrorT t1) )
+=   def mirrorT
+inOrder (mirrorT (NodeT x t1 t2))
+
+Lado Der)
+...
+
+¿Vale hacer un lema auxiliar de este tipo 
+  reverse (xs ++ [x] ++ ys) = reverse ys ++ [x] ++ reverse xs?
+Sí, vale. SALE como corolario (consecuencia) del ejercicio XX: para todo xs. para todo ys. reverse (xs++ys) = reverse ys ++ reverse xs
+Desarrollo:      
+   reverse (xs ++ [x] ++ ys) 
+ =   (asociatividad de (++))
+   reverse (xs ++ ([x] ++ ys)) 
+ =   (ejercicio XX)
+   reverse ([x] ++ ys) ++ reverse xs
+ =   (ejercicio XX)
+   (reverse ys ++ reverse [x]) ++ reverse xs
+ =   (asociatividad de (++))
+   reverse ys ++ reverse [x] ++ reverse xs
+ =   (reverse.2, reverse.1)
+   reverse ys ++ [x] ++ reverse xs
