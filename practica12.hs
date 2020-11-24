@@ -214,3 +214,295 @@ Demostración
 	evalEA (BOp b e1 e2)
 -}
 
+
+data Tree a = EmptyT | NodeT a (Tree a) (Tree a) deriving Show
+
+foldT:: b -> (a -> b -> b -> b) -> Tree a -> b 
+foldT fe fn EmptyT = fe
+foldT fe fn (NodeT x ti td) = fn x (foldT fe fn ti) (foldT fe fn td) 
+
+treeInt = NodeT 1 (NodeT 3 EmptyT EmptyT) (NodeT 4 (NodeT 5 EmptyT EmptyT) (EmptyT))
+{-
+       1
+   3        4   
+e    e    5   e
+       e  e
+-}
+
+treeIntBST = NodeT 4 (NodeT 3 EmptyT EmptyT) (NodeT 6 (NodeT 5 EmptyT EmptyT) (EmptyT))
+{-
+       4
+   3        6   
+e    e    5   e
+       e  e
+-}
+
+mapT :: (a -> b) -> Tree a -> Tree b
+--mapT f = foldT EmptyT (\x rti rtd -> NodeT (f x) rti rtd)
+mapT f = foldT EmptyT (NodeT .f)
+
+sumT :: Tree Int -> Int
+sumT = foldT 0 (\x ri rd -> x + ri + rd)
+
+sizeT :: Tree a -> Int
+sizeT = foldT 0 (\_ ri rd -> 1 + ri + rd)
+
+heightT :: Tree a -> Int
+heightT = foldT 0 (\_ ri rd -> 1 + ri `max` rd)
+
+preOrder :: Tree a -> [a]
+preOrder = foldT [] (\x ri rd -> x : ri ++ rd)
+
+inOrder :: Tree a -> [a]
+inOrder = foldT [] (\x ri rd -> ri ++ [x] ++ rd)
+
+postOrder :: Tree a -> [a]
+postOrder = foldT [] (\x ri rd -> ri ++ rd ++ [x])
+
+mirrorT :: Tree a -> Tree a
+--mirrorT = foldT EmptyT (\x ri rd -> NodeT x rd ri)
+mirrorT = foldT EmptyT (\x -> flip (NodeT x) )
+
+countByT :: (a -> Bool) -> Tree a -> Int
+countByT f = foldT 0 (\x ri rd -> (if f x then 1 else 0) + rd+ ri)
+
+partitionT :: (a -> Bool) -> Tree a -> ([a], [a])
+--partitionT f = foldT ([],[]) (\x ri rd -> if f x then (x : (fst ri ++ fst rd), snd ri ++ snd rd) else (fst ri ++ fst rd, x : (snd ri ++ snd rd)))
+partitionT f = foldT ([],[]) g 
+  --where g x ri rd = if f x then (x : fst ri ++ fst rd, snd ri ++ snd rd) else (fst ri ++ fst rd, x : snd ri ++ snd rd)
+  where g x (r1, r2) (r3, r4) = if f x then (x : r1++ r3, r2++r4) else (r1 ++ r3, x : r2 ++ r4)
+
+zipWithT :: (a->b->c) -> Tree a -> (Tree b -> Tree c)
+zipWithT f EmptyT EmptyT = EmptyT
+zipWithT f EmptyT (NodeT x ri rd) = EmptyT
+zipWithT f (NodeT x ri rd) EmptyT = EmptyT
+zipWithT f (NodeT x rxi rxd) (NodeT y ryi ryd) = NodeT (f x y) (zipWithT f rxi ryi) (zipWithT f rxd ryd)
+
+zipWithT' :: (a->b->c) -> Tree a -> Tree b -> Tree c
+zipWithT' f t1 t2 = foldT (\_ -> EmptyT) g t1 t2
+  where g x rxi rxd EmptyT = EmptyT
+        g x rxi rxd (NodeT y ryi ryd) = NodeT (f x y) (rxi ryi) (rxd ryd)
+
+caminoMasLargo :: Tree a -> [a]
+caminoMasLargo = foldT [] (\x ri rd -> x : (if length ri >= length rd then ri else rd))
+
+todosLosCaminos :: Tree a -> [[a]]
+todosLosCaminos EmptyT = []
+todosLosCaminos (NodeT x ri rd) = agregarAListasDeListas x (todosLosCaminos ri) (todosLosCaminos rd)
+
+agregarAListasDeListas::a -> [[a]] -> [[a]] -> [[a]]
+agregarAListasDeListas x xss yss = agregarAListas x xss ++ agregarAListas x yss
+
+agregarAListas::a -> [[a]] -> [[a]]
+agregarAListas x [] = [[x]]
+agregarAListas x (xs:xss) = (x:xs):xss
+
+--todosLosCaminos' :: Tree a -> [[a]]
+--todosLosCaminos' = foldT [[]] (\x ri rd -> map (x:) (ri++rd) )
+
+--todosLosNiveles :: Tree a -> [[a]]
+-- ??
+
+nivelN :: Tree a -> Int -> [a]
+nivelN EmptyT n = []
+nivelN (NodeT x ti td) 0 = [x]
+nivelN (NodeT x ti td) n = nivelN ti (n-1) ++ nivelN td (n-1)
+
+nivelN' :: Tree a -> Int -> [a]
+nivelN' t n = foldT g z t n 
+  where g n = []
+        z x ti td 0 = [x]
+        z x ti td n = ti (n-1) ++ td (n-1)
+
+recT:: b -> (a -> Tree a -> b -> Tree a -> b -> b) -> Tree a -> b 
+recT fe fn EmptyT = fe
+recT fe fn (NodeT x ti td) = fn x ti (recT fe fn ti) td (recT fe fn td) 
+
+insertT :: Ord a =>  a -> Tree a -> Tree a
+insertT e EmptyT = NodeT e EmptyT EmptyT
+insertT e (NodeT x ti td) = if e < x then NodeT x (insertT e ti) td else NodeT x ti (insertT e td)
+
+insertT' :: Ord a =>  a -> Tree a -> Tree a
+--insertT' e t = recT EmptyT (\x ti rti td rtd -> if e < x then NodeT x (NodeT e rti EmptyT) td else NodeT x ti (NodeT e rtd EmptyT) ) t 
+insertT' e t = recT EmptyT g t 
+  where g x ti rti td rtd = 
+         if e < x 
+             then NodeT x (NodeT e rti EmptyT) td 
+             else NodeT x ti (NodeT e rtd EmptyT)
+
+caminoHasta :: Eq a => a -> Tree a -> [a]
+caminoHasta e EmptyT = [e]
+caminoHasta e (NodeT x ti td) = (caminoHasta e ti) ++ (caminoHasta e ti)
+
+-- Ej 6
+
+data Dir = Lt | Rt | Straight deriving Show
+data Mapa a = Cofre [a] | Nada (Mapa a) | Bifurcacion [a] (Mapa a) (Mapa a) deriving Show
+
+foldM::([a] -> b) -> (b -> b) -> ([a] -> b -> b -> b) -> Mapa a -> b
+foldM fc fn fb (Cofre xs) = fc xs
+foldM fc fn fb (Nada m) = fn (foldM fc fn fb m)
+foldM fc fn fb (Bifurcacion xs m1 m2) = fb xs (foldM fc fn fb m1) (foldM fc fn fb m2)
+
+recM::([a] -> b) -> (Mapa a -> b -> b) -> ([a] -> Mapa a -> b -> Mapa a -> b -> b)  -> Mapa a -> b
+recM fc fn fb (Cofre xs) = fc xs
+recM fc fn fb (Nada m) = fn m (recM fc fn fb m)
+recM fc fn fb (Bifurcacion xs m1 m2) = fb xs m1 (recM fc fn fb m1) m2 (recM fc fn fb m2)
+
+objects :: Mapa a -> [a]
+objects = foldM id id (\xs rm1 rm2 -> xs ++ rm1 ++ rm2)
+
+mapM :: (a -> b) -> Mapa a -> Mapa b
+mapM f = foldM (\xs -> Cofre (map f xs)) Nada (\xs rm1 rm2 ->Bifurcacion (map f xs) rm1 rm2)
+
+has :: (a -> Bool) -> Mapa a -> Bool
+--has f = foldM (\xs ->any f xs) id (\xs rm1 rm2 ->((any f xs) || rm1) || rm2)
+has f = foldM (any f) id (\xs rm1 rm2 ->(any f xs) || rm1 || rm2)
+
+hasObjectAt :: (a->Bool) -> Mapa a -> [Dir] -> Bool 
+hasObjectAt f = foldM c n b
+  where c xs  []    = any f xs
+        c xs (d:ds) = False -- error ""
+        n m (Straight:ds) = m ds
+        n m _ = False -- error "no hay camino disponible"
+        b xs m1 m2 [] = any f xs
+        b xs m1 m2 (Lt:ds) = m1 ds
+        b xs m1 m2 (Rt:ds) = m2 ds
+        b xs m1 m2 _ = False -- error "no hay camino disponible"
+
+longestPath :: Mapa a -> [Dir]
+longestPath = foldM (const []) (\r -> Straight:r) (\xs ri rd -> if length ri >= length rd then Lt:ri else Rt:rd)
+
+objectsOfLongestPath :: Mapa a -> [a]
+objectsOfLongestPath = recM id (\m rm ->rm) (\xs m1 rm1 m2 rm2-> if longestMap m1 m2 then xs++rm1 else xs++rm2)
+
+longestMap::Mapa a -> Mapa a -> Bool
+longestMap m1 m2 = length (longestPath m1) >= length (longestPath m2) 
+
+allPaths::Mapa a->[[Dir]]
+allPaths = foldM (const [[]]) (addtToAll Straight) (\_ r1 r2 -> addtToAll Lt r1 ++ addtToAll Rt r2)
+
+addtToAll :: Dir -> [[Dir]] -> [[Dir]]
+addtToAll d []  = [[d]]
+addtToAll d (xs:xss) = addAll d xs xss
+--addtToAll dir = foldr (addAll dir) []
+
+addAll :: Dir -> [Dir] -> [[Dir]] -> [[Dir]]
+addAll d xs xss = [d:xs] ++ xss
+
+objectsPerLevel::Mapa a->[[a]]
+objectsPerLevel = foldM (\xs -> [xs]) (\rm ->[]:rm) (\xs rm1 rm2 -> xs: appendLevels rm1 rm2 )
+
+appendLevels::[[a]]->[[a]]->[[a]]
+appendLevels [] yss = yss
+appendLevels xss [] = xss 
+appendLevels (xs:xss) (ys:yss) =  (xs ++ ys) : appendLevels xss yss
+
+mapa = Bifurcacion [1, 2, 3] (Cofre [4, 5, 6, 7]) (Cofre [7,7, 9])
+mapa2 = Nada (Bifurcacion [1, 2, 3] (Cofre [10..20]) (Cofre [7,7, 9]))
+
+-- Ej 7
+data GTree a = GNode a [GTree a] deriving Show
+
+foldGT0::(a -> [b] -> b) -> GTree a -> b
+foldGT0 f (GNode e ts) = f e (map (foldGT0 f) ts) 
+
+foldGT1 :: (a -> c -> b) -> (b -> c -> c) -> c -> GTree a -> b
+foldGT1 g f z (GNode e xs) = g e (foldr f z (map (foldGT1 g f z) xs))
+
+foldGT :: (a -> c -> b) -> ([b] -> c) -> GTree a -> b
+foldGT g f (GNode e xs) = g e (f (map (foldGT g f) xs))
+
+recGT0 :: (a -> [GTree a] -> [b] -> b) -> GTree a -> b
+recGT0 f (GNode x xs) = f x xs (map (recGT0 f) xs)
+
+--recGT1 :: (a -> c -> [GTree a] -> b) -> ([GTree a] -> b -> c -> c) -> c -> GTree a -> b
+--recGT1 g f z (GNode e xs) = g e xs (foldr f z (map (recGT1 g f z) xs))
+
+recGT :: (a -> c -> [GTree a] -> b) -> ([b] -> c) -> GTree a -> b
+recGT g f (GNode e xs) = g e (f (map (recGT g f) xs)) xs
+
+gtree = GNode 1 [GNode 2 [GNode 5 [], GNode 6 []] , GNode 3 [GNode 7 []], GNode 4 []]
+
+mapGT :: (a -> b) -> GTree a -> GTree b
+--mapGT f (GNode e ts) = GNode (f e) (map (mapGT f) ts )
+mapGT f = foldGT0 (\e ts -> GNode (f e) ts)
+--mapGT f = foldGT (\e n -> GNode e n) (map . f)
+
+sumGT :: GTree Int -> Int
+--sumGT (GNode e ts) = e + sum (map sumGT ts)
+--sumGT = foldGT0 (\x ts -> x + sum ts)
+sumGT = foldGT (+) sum
+
+sizeGT :: GTree a -> Int
+--sizeGT (GNode e ts) = 1 + sum (map sizeGT ts) 
+--sizeGT = foldGT0 (\_ ts -> 1 + sum ts)
+sizeGT = foldGT (\x c -> 1+c) sum
+
+heightGT :: GTree a -> Int
+--heightGT (GNode e ts) = 1 + maximum (map heightGT ts)
+--heightGT = foldGT0 (\_ ts -> 1 + maximum ts)
+heightGT = foldGT (\x c -> 1 + c) maximum
+
+preOrderGT :: GTree a -> [a]
+--preOrderGT (GNode e ts) = e : concat (map preOrderGT ts)
+--preOrderGT = foldGT0 (\e ts -> e : concat ts)
+preOrderGT = foldGT (\x c-> x : c) concat
+
+postOrderGT :: GTree a -> [a]
+--postOrderGT (GNode e ts) = concat (map postOrderGT ts) ++ [e]
+--postOrderGT = foldGT0 (\e ts -> concat ts++[e])
+postOrderGT = foldGT (\x c-> c++[x]) concat
+
+mirrorGT :: GTree a -> GTree a
+--mirrorGT (GNode e ts) = GNode e  (reverse (map mirrorGT ts))
+--mirrorGT  = foldGT0 (\e ts ->GNode e (reverse ts))
+mirrorGT  = foldGT GNode reverse--foldGT (\e c ->GNode e c) reverse
+
+countByGT :: (a -> Bool) -> GTree a -> Int
+--countByGT f (GNode e ts) = unoSiCumple f e + sum (map (countByGT f) ts)
+--countByGT f  = foldGT0 (\e ts ->unoSiCumple f e + sum ts)
+countByGT f  = foldGT (\e c ->unoSiCumple f e + c) sum
+
+unoSiCumple:: (a -> Bool) -> a -> Int
+unoSiCumple f e = if f e then 1 else 0
+
+partitionGT :: (a -> Bool) -> GTree a -> ([a], [a])
+partitionGT pr = foldGT f g                                        
+                  where f x (r1,r2) = if pr x then (x:r1,r2) else (r1,x:r2) 
+                        g r1 = aplanarPares r1
+
+aplanarPares:: [([a],[b])] -> ([a],[b])
+aplanarPares [] = ([],[])
+aplanarPares ((x,y):xs) = (x ++ fst (aplanarPares xs),y ++ snd (aplanarPares xs))
+
+--todosLosCaminosGT :: GTree a -> [[a]]
+--todosLosCaminosGT = foldGT1 (\x ts -> concat (map ([x]:) ts))
+--todosLosCaminosGT (GNode e ts)= map ([e]:) concat (map todosLosCaminosGT ts)
+--todosLosCaminosGT = foldGT (\x r1 -> map ([x]:) r1 ) concat
+
+caminoHastaGT :: Eq a => a -> GTree a -> [a]
+caminoHastaGT a = foldGT (:) g
+  where g xs = findList a xs 
+
+findList a [] = []
+findList a (x:xs) = if any (==a) x 
+                      then x 
+                      else findList a xs
+
+gtree = GNode 1 [GNode 2 [GNode 5 [], GNode 6 []] , GNode 3 [GNode 7 []], GNode 4 []]
+
+{-
+ 1 
+    2
+      5
+      6
+    3
+     7
+     4
+-}
+
+
+
+--caminoMasLargoGT :: GTree a -> [a]
+--caminoMasLargoGT = foldGT0 (\x ts ->x : max (ts) ) 
