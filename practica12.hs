@@ -214,7 +214,11 @@ Demostración
 	evalEA (BOp b e1 e2)
 -}
 
+<<<<<<< HEAD
 
+=======
+--Ej 3
+>>>>>>> 7296ca3ca9e6f18942c3edabb0247dd13c1aabdb
 data Tree a = EmptyT | NodeT a (Tree a) (Tree a) deriving Show
 
 foldT:: b -> (a -> b -> b -> b) -> Tree a -> b 
@@ -336,8 +340,8 @@ caminoHasta e (NodeT x ti td) = (caminoHasta e ti) ++ (caminoHasta e ti)
 
 -- Ej 6
 
-data Dir = Lt | Rt | Straight deriving Show
-data Mapa a = Cofre [a] | Nada (Mapa a) | Bifurcacion [a] (Mapa a) (Mapa a) deriving Show
+data Dir = Lt | Rt | Straight
+data Mapa a = Cofre [a] | Nada (Mapa a) | Bifurcacion [a] (Mapa a) (Mapa a)
 
 foldM::([a] -> b) -> (b -> b) -> ([a] -> b -> b -> b) -> Mapa a -> b
 foldM fc fn fb (Cofre xs) = fc xs
@@ -476,10 +480,14 @@ aplanarPares:: [([a],[b])] -> ([a],[b])
 aplanarPares [] = ([],[])
 aplanarPares ((x,y):xs) = (x ++ fst (aplanarPares xs),y ++ snd (aplanarPares xs))
 
+
+caminoMasLargoGT ::Ord a => GTree a -> [a]
+--caminoMasLargoGT = foldGT0 (\x ts ->x : maximum ts ) 
+caminoMasLargoGT = foldGT0 (\x ts ->x : concat (ts) ) 
+
 --todosLosCaminosGT :: GTree a -> [[a]]
 --todosLosCaminosGT = foldGT1 (\x ts -> concat (map ([x]:) ts))
---todosLosCaminosGT (GNode e ts)= map ([e]:) concat (map todosLosCaminosGT ts)
---todosLosCaminosGT = foldGT (\x r1 -> map ([x]:) r1 ) concat
+--todosLosCaminosGT (GNode a ts)= (map (a:) (concat (map todosLosCaminosGT ts)))
 
 caminoHastaGT :: Eq a => a -> GTree a -> [a]
 caminoHastaGT a = foldGT (:) g
@@ -499,10 +507,20 @@ gtree = GNode 1 [GNode 2 [GNode 5 [], GNode 6 []] , GNode 3 [GNode 7 []], GNode 
       6
     3
      7
-     4
+    4
 -}
 
 
 
---caminoMasLargoGT :: GTree a -> [a]
---caminoMasLargoGT = foldGT0 (\x ts ->x : max (ts) ) 
+type Name = String
+type Content = String
+type Path = [Name]
+data FileSystem = File Name Content | Folder Name [FileSystem]
+
+foldFS::(Name->Content->b)-> (Name-> [c] -> b) -> FileSystem -> b
+foldFS g f (File n c) = g n c
+foldFS g f (Folder n fs) = f n ((map (foldFS g f) fs))
+
+--foldGT :: (a -> c -> b) -> ([b] -> c) -> GTree a -> b
+--foldGT g f (GNode e xs) = g e (f (map (foldGT g f) xs))
+ 
