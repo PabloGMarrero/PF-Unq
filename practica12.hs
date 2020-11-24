@@ -153,7 +153,7 @@ evalBOp Mul = (*)
 
 --showEA::EA->String
 
-ea2ExpA'::EA->ExpA​
+ea2ExpA'::EA->ExpA
 ea2ExpA' = foldEA Cte bop2ExpA
 
 bop2ExpA::BinOp->ExpA->ExpA->ExpA
@@ -214,11 +214,7 @@ Demostración
 	evalEA (BOp b e1 e2)
 -}
 
-<<<<<<< HEAD
-
-=======
 --Ej 3
->>>>>>> 7296ca3ca9e6f18942c3edabb0247dd13c1aabdb
 data Tree a = EmptyT | NodeT a (Tree a) (Tree a) deriving Show
 
 foldT:: b -> (a -> b -> b -> b) -> Tree a -> b 
@@ -426,64 +422,88 @@ recGT0 f (GNode x xs) = f x xs (map (recGT0 f) xs)
 recGT :: (a -> c -> [GTree a] -> b) -> ([b] -> c) -> GTree a -> b
 recGT g f (GNode e xs) = g e (f (map (recGT g f) xs)) xs
 
-gtree = GNode 1 [GNode 2 [GNode 5 [], GNode 6 []] , GNode 3 [GNode 7 []], GNode 4 []]
-
 mapGT :: (a -> b) -> GTree a -> GTree b
 --mapGT f (GNode e ts) = GNode (f e) (map (mapGT f) ts )
-mapGT f = foldGT0 (\e ts -> GNode (f e) ts)
---mapGT f = foldGT (\e n -> GNode e n) (map . f)
+--mapGT f = foldGT0 (\e ts -> GNode (f e) ts)
+--mapGT f = foldGT1 (\e ts -> GNode (f e) ts) (:) []
+mapGT f = foldGT (\e n -> GNode (f e) n) id
 
 sumGT :: GTree Int -> Int
 --sumGT (GNode e ts) = e + sum (map sumGT ts)
 --sumGT = foldGT0 (\x ts -> x + sum ts)
+--sumGT = foldGT1 (\x ts -> x + ts) (\x xs-> x + xs) 0
+{- (\x ts -> x + ts) -> x es el e de GNode e ts, ts es la recursiòn procesada sobre la listas una vez que se realizó
+(\x rxs-> x + rxs) -> x es el elemento actual sobre la lista y rxs es la parte recusiva procesada sin xs (vease como x: recxs)
+0 es el caso base del foldr para la función anterior. -}
 sumGT = foldGT (+) sum
 
+depthGT = foldGT (\x d -> 1+d) (maxOr 0)
+ where maxOr x [] = x
+       maxOr _ xs = maximum xs
+
 sizeGT :: GTree a -> Int
---sizeGT (GNode e ts) = 1 + sum (map sizeGT ts) 
+--sizeGT (GNode e ts) = 1 + sum (map sizeGT ts)
 --sizeGT = foldGT0 (\_ ts -> 1 + sum ts)
-sizeGT = foldGT (\x c -> 1+c) sum
+sizeGT = foldGT1 (\x ts -> 1 + ts) (\x xs-> x + xs) 0
+--sizeGT = foldGT (\x c -> 1+c) sum
 
 heightGT :: GTree a -> Int
---heightGT (GNode e ts) = 1 + maximum (map heightGT ts)
---heightGT = foldGT0 (\_ ts -> 1 + maximum ts)
-heightGT = foldGT (\x c -> 1 + c) maximum
+--heightGT (GNode e ts) = 1 + maxOr 0 (map heightGT ts)
+--heightGT = foldGT0 (\_ ts -> 1 + maxOr 0 ts)
+--heightGT = foldGT1 (\_ ts -> ts) (\x xs-> 1 + xs) 0
+heightGT = foldGT (\x c -> 1 + c) (maxOr 0)
+
+maxOr::Ord a=> a-> [a]-> a
+maxOr x [] = x
+maxOr _ xs = maximum xs
 
 preOrderGT :: GTree a -> [a]
 --preOrderGT (GNode e ts) = e : concat (map preOrderGT ts)
 --preOrderGT = foldGT0 (\e ts -> e : concat ts)
+--preOrderGT = foldGT1 (\x ts -> x: concat ts) (\x xs -> x: xs) [] -- foldGT1 (\x ts -> x: concat ts) (:) [] 
 preOrderGT = foldGT (\x c-> x : c) concat
 
 postOrderGT :: GTree a -> [a]
 --postOrderGT (GNode e ts) = concat (map postOrderGT ts) ++ [e]
 --postOrderGT = foldGT0 (\e ts -> concat ts++[e])
+--postOrderGT = foldGT1 (\e ts -> concat ts++[e]) (\x xs -> x:xs) []  -- foldGT1 (\e ts -> concat ts++[e]) (:) [] 
 postOrderGT = foldGT (\x c-> c++[x]) concat
 
 mirrorGT :: GTree a -> GTree a
 --mirrorGT (GNode e ts) = GNode e  (reverse (map mirrorGT ts))
 --mirrorGT  = foldGT0 (\e ts ->GNode e (reverse ts))
-mirrorGT  = foldGT GNode reverse--foldGT (\e c ->GNode e c) reverse
+--mirrorGT  = foldGT1 (\e ts ->GNode e ts) (\x xs -> xs++[x]) []
+mirrorGT  = foldGT GNode reverse --foldGT (\e c ->GNode e c) reverse
 
 countByGT :: (a -> Bool) -> GTree a -> Int
 --countByGT f (GNode e ts) = unoSiCumple f e + sum (map (countByGT f) ts)
 --countByGT f  = foldGT0 (\e ts ->unoSiCumple f e + sum ts)
+--countByGT f  = foldGT1 (\e ts ->unoSiCumple f e + ts) (+) 0
 countByGT f  = foldGT (\e c ->unoSiCumple f e + c) sum
 
 unoSiCumple:: (a -> Bool) -> a -> Int
 unoSiCumple f e = if f e then 1 else 0
 
 partitionGT :: (a -> Bool) -> GTree a -> ([a], [a])
-partitionGT pr = foldGT f g                                        
-                  where f x (r1,r2) = if pr x then (x:r1,r2) else (r1,x:r2) 
-                        g r1 = aplanarPares r1
+--partitionGT p (GNode e ts) = f e (aplanarPares (map (partitionGT p) ts))
+-- where f x (r1,r2) = if p x then (x:r1,r2) else (r1,x:r2) 
+partitionGT p = foldGT f g                                        
+ where f x (r1,r2) = if p x then (x:r1,r2) else (r1,x:r2) 
+       g r1 = aplanarPares r1
 
 aplanarPares:: [([a],[b])] -> ([a],[b])
 aplanarPares [] = ([],[])
 aplanarPares ((x,y):xs) = (x ++ fst (aplanarPares xs),y ++ snd (aplanarPares xs))
 
 
-caminoMasLargoGT ::Ord a => GTree a -> [a]
+{-
+caminoMasLargoGT = foldGT b (maxOr 0)
+ where b e [] = [e]
+       b e (x:xs) = e:(x:xs)
+-}
+
 --caminoMasLargoGT = foldGT0 (\x ts ->x : maximum ts ) 
-caminoMasLargoGT = foldGT0 (\x ts ->x : concat (ts) ) 
+--caminoMasLargoGT = foldGT0 (\x ts ->x : concat (ts) ) 
 
 --todosLosCaminosGT :: GTree a -> [[a]]
 --todosLosCaminosGT = foldGT1 (\x ts -> concat (map ([x]:) ts))
@@ -498,18 +518,20 @@ findList a (x:xs) = if any (==a) x
                       then x 
                       else findList a xs
 
-gtree = GNode 1 [GNode 2 [GNode 5 [], GNode 6 []] , GNode 3 [GNode 7 []], GNode 4 []]
+gtree = GNode 1 [GNode 2 [GNode 5 [], GNode 6 []
+                ] , 
+        GNode 3 [GNode 7 []], GNode 4 []
+        ]
 
 {-
- 1 
+1 
     2
-      5
-      6
+       5
+       6
     3
-     7
+       7
     4
 -}
-
 
 
 type Name = String
@@ -517,10 +539,26 @@ type Content = String
 type Path = [Name]
 data FileSystem = File Name Content | Folder Name [FileSystem]
 
-foldFS::(Name->Content->b)-> (Name-> [c] -> b) -> FileSystem -> b
-foldFS g f (File n c) = g n c
-foldFS g f (Folder n fs) = f n ((map (foldFS g f) fs))
+{-foldGT0::(a -> [b] -> b) -> GTree a -> b
+foldGT0 f (GNode e ts) = f e (map (foldGT0 f) ts) 
 
---foldGT :: (a -> c -> b) -> ([b] -> c) -> GTree a -> b
---foldGT g f (GNode e xs) = g e (f (map (foldGT g f) xs))
+foldGT1 :: (a -> c -> b) -> (b -> c -> c) -> c -> GTree a -> b
+foldGT1 g f z (GNode e xs) = g e (foldr f z (map (foldGT1 g f z) xs))
+
+foldGT :: (a -> c -> b) -> ([b] -> c) -> GTree a -> b
+foldGT g f (GNode e xs) = g e (f (map (foldGT g f) xs))-}
+
+
+foldFS :: (Name -> Content -> b) -> (Name -> c -> b) -> ( [b] -> c) -> FileSystem -> b
+foldFS f g h (File n m ) = f n m
+foldFS f g h (Folder n fs) =  g n (h (map (foldFS f g h) fs)) 
+
+
+
+
+
+--recFS :: (Name-> Content -> b) -> (Name -> b -> b) -> ([b] -> b) -> FileSystem -> b
+--recFS f g h (File n m ) = f n m
+--recFS f g h (Folder n fs) =  g n fs (h (map (recFS f g h) fs)) 
+
  
