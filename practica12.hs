@@ -537,28 +537,49 @@ gtree = GNode 1 [GNode 2 [GNode 5 [], GNode 6 []
 type Name = String
 type Content = String
 type Path = [Name]
-data FileSystem = File Name Content | Folder Name [FileSystem]
+data FileSystem = File Name Content | Folder Name [FileSystem] deriving Show
 
-{-foldGT0::(a -> [b] -> b) -> GTree a -> b
-foldGT0 f (GNode e ts) = f e (map (foldGT0 f) ts) 
+foldFS1 :: (Name -> Content -> b) -> (Name -> c -> b) -> ( [b] -> c) -> FileSystem -> b
+foldFS1 f g h (File n c ) = f n c
+foldFS1 f g h (Folder n fs) =  g n (h (map (foldFS1 f g h) fs)) 
 
-foldGT1 :: (a -> c -> b) -> (b -> c -> c) -> c -> GTree a -> b
-foldGT1 g f z (GNode e xs) = g e (foldr f z (map (foldGT1 g f z) xs))
+{-
+foldFS0::(a -> [b] -> b) -> FileSystem a -> b
+foldFS0 f (File n c) = 
+foldFS0 f (Folder n fs) = f e (map (foldFS0 f) ts) 
 
-foldGT :: (a -> c -> b) -> ([b] -> c) -> GTree a -> b
-foldGT g f (GNode e xs) = g e (f (map (foldGT g f) xs))-}
+foldFS:: (Name -> c -> b) -> ([b] -> c) -> FileSystem a -> b
+foldFS g f (File n c) = 
+foldFS g f (Folder n fs) = g e (f (map (foldFS g f) xs))
+-}
+
+recFS :: (Name -> Content -> b) -> (Name -> c -> b) -> ( [FileSystem] -> [b] -> c) -> FileSystem -> b
+recFS f g h (File n c ) = f n c
+recFS f g h (Folder n fs) =  g n (h fs (map (recFS f g h) fs)) 
 
 
-foldFS :: (Name -> Content -> b) -> (Name -> c -> b) -> ( [b] -> c) -> FileSystem -> b
-foldFS f g h (File n m ) = f n m
-foldFS f g h (Folder n fs) =  g n (h (map (foldFS f g h) fs)) 
+amountOfFiles :: FileSystem -> Int
+amountOfFiles = foldFS1 (\n c -> 1) (\n rfs -> 1+ rfs) sum
+
+find :: Name -> FileSystem -> Maybe Content
+find n = foldFS1 (\n' c -> if n' == n then Just c else Nothing) (\n' rfs -> aplanarMaybe rfs) (\rfs -> rfs)
+
+aplanarMaybe::[Maybe a] -> Maybe a
+aplanarMaybe [Nothing] = Nothing
+aplanarMaybe [Just c] = Just c
+aplanarMaybe (m:ms) = if isNothing m then Nothing else aplanarMaybe ms
+
+isNothing::Maybe a -> Bool
+isNothing Nothing = True
+isNothing _ = False
+
+pathOf :: Name -> FileSystem -> Path
+--pathOf n = foldFS1 (\n' c -> if n == n' then [n] else []) (\n' rfs -> n':rfs) concat
+pathOf n = foldFS1 (\n' c -> if n == n' then [n] else []) (:) concat
+
+mapContents :: (Content -> Content) -> FileSystem -> FileSystem
+--mapContents f (File n c ) = File n (f c)
+--mapContents f (Folder n fs) = Folder n (map (mapContents f) fs)
+mapContents f = foldFS1 (\n c -> File n (f c) ) (\n rfs ->Folder n rfs) id
 
 
-
-
-
---recFS :: (Name-> Content -> b) -> (Name -> b -> b) -> ([b] -> b) -> FileSystem -> b
---recFS f g h (File n m ) = f n m
---recFS f g h (Folder n fs) =  g n fs (h (map (recFS f g h) fs)) 
-
- 
