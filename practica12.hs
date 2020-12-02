@@ -106,8 +106,13 @@ recExpA fc fs fp (Cte n)= fc n
 recExpA fc fs fp (Suma e1 e2)= fs e1 (recExpA fc fs fp e1) e2 (recExpA fc fs fp e2)
 recExpA fc fs fp (Prod e1 e2)= fp e1 (recExpA fc fs fp e1) e2 (recExpA fc fs fp e2)
 
---cantDeSumaCeros::ExpA->Int
---cantDeSumaCeros = foldExpA ? ? ?
+
+cantDeSumaCeros = recExpA c s p
+ where c n = 0
+       s (Cte 0) e1 t2 e2 = 1 + e1 + e2
+       s t1 e1 (Cte 0) e2 = 1 + e1 + e2
+       s t1 e1 t2 e2 = e1 + e2
+       p t1 e1 t2 e2 = e1 + e2
 
 --cantDeProdUnos::ExpA->Int​
 
@@ -334,6 +339,14 @@ caminoHasta :: Eq a => a -> Tree a -> [a]
 caminoHasta e EmptyT = [e]
 caminoHasta e (NodeT x ti td) = (caminoHasta e ti) ++ (caminoHasta e ti)
 
+-- Ej 4 
+--type Record a b = [(a,b)]
+--select :: (Record a b -> Bool) -> [Record a b] -> [Record a b]
+
+
+-- Ej 5
+
+
 -- Ej 6
 
 data Dir = Lt | Rt | Straight
@@ -539,9 +552,9 @@ type Content = String
 type Path = [Name]
 data FileSystem = File Name Content | Folder Name [FileSystem] deriving Show
 
-foldFS1 :: (Name -> Content -> b) -> (Name -> c -> b) -> ( [b] -> c) -> FileSystem -> b
-foldFS1 f g h (File n c ) = f n c
-foldFS1 f g h (Folder n fs) =  g n (h (map (foldFS1 f g h) fs)) 
+foldFS :: (Name -> Content -> b) -> (Name -> c -> b) -> ( [b] -> c) -> FileSystem -> b
+foldFS f g h (File n c ) = f n c
+foldFS f g h (Folder n fs) =  g n (h (map (foldFS f g h) fs)) 
 
 {-
 foldFS0::(a -> [b] -> b) -> FileSystem a -> b
@@ -559,10 +572,10 @@ recFS f g h (Folder n fs) =  g n (h fs (map (recFS f g h) fs))
 
 
 amountOfFiles :: FileSystem -> Int
-amountOfFiles = foldFS1 (\n c -> 1) (\n rfs -> 1+ rfs) sum
+amountOfFiles = foldFS (\n c -> 1) (\n rfs -> 1+ rfs) sum
 
 find :: Name -> FileSystem -> Maybe Content
-find n = foldFS1 (\n' c -> if n' == n then Just c else Nothing) (\n' rfs -> aplanarMaybe rfs) (\rfs -> rfs)
+find n = foldFS (\n' c -> if n' == n then Just c else Nothing) (\n' rfs -> aplanarMaybe rfs) (\rfs -> rfs)
 
 aplanarMaybe::[Maybe a] -> Maybe a
 aplanarMaybe [Nothing] = Nothing
@@ -574,12 +587,74 @@ isNothing Nothing = True
 isNothing _ = False
 
 pathOf :: Name -> FileSystem -> Path
---pathOf n = foldFS1 (\n' c -> if n == n' then [n] else []) (\n' rfs -> n':rfs) concat
-pathOf n = foldFS1 (\n' c -> if n == n' then [n] else []) (:) concat
+--pathOf n = foldFS (\n' c -> if n == n' then [n] else []) (\n' rfs -> n':rfs) concat
+pathOf n = foldFS (\n' c -> if n == n' then [n] else []) (:) concat
 
 mapContents :: (Content -> Content) -> FileSystem -> FileSystem
 --mapContents f (File n c ) = File n (f c)
 --mapContents f (Folder n fs) = Folder n (map (mapContents f) fs)
-mapContents f = foldFS1 (\n c -> File n (f c) ) (\n rfs ->Folder n rfs) id
+mapContents f = foldFS (\n c -> File n (f c) ) (\n rfs ->Folder n rfs) id
 
+
+
+--- EXTRA 
+
+data ExpG = Constante Int | ApplyOp OpG [ExpG] deriving Show
+data OpG = Sumatoria | Productoria | Promedio deriving Show
+
+foldEG::(Int -> b) -> (OpG -> c -> b) -> ([b] -> c) -> ExpG -> b
+foldEG fc fo fe (Constante n) = fc n
+foldEG fc fo fe (ApplyOp op es) = fo op (fe (map (foldEG fc fo fe) es))
+
+recEG::(Int -> b) -> (OpG -> [ExpG] -> c -> b) -> ([b] -> c) -> ExpG -> b
+recEG fc fo fe (Constante n) = fc n
+recEG fc fo fe (ApplyOp op es) = fo op es (fe (map (recEG fc fo fe) es))
+
+-- Reglas
+-- 1) Sin listas vacias
+-- 2) Sin sumatorias de cero (listas solo con ceros)
+-- 3) Sin productorias de uno (listas solo con unos)
+
+evalG :: ExpG -> Int
+evalG = foldEG (\n -> n) (\op is -> appOpALista op is) id
+
+appOpALista::OpG-> [Int]-> Int
+appOpALista Sumatoria xs = foldr (+) 0 xs
+appOpALista Promedio xs = div (foldr (+) 1 xs) (length xs)
+appOpALista Productoria xs =  foldr (*) 0 xs
+
+simpG :: ExpG -> ExpG
+simpG (Constante n) = Constante n
+simpG (ApplyOp op exs) = simpOpG op (map simpG exs)
+
+simpOpG:: OpG -> [ExpG] -> ExpG
+--simpOpG Sumatoria ex = Sumatoria (filter esCero ex)
+--simpOpG Productoria ex = Productoria (filter esUno ex)
+simpOpG Promedio ex = Promedio ex
+
+esCero:: ExpG -> Bool
+esCero (Constante 0) = True
+esCero  _            = False
+
+esUno:: ExpG -> Bool
+esUno (Constante 1) = True
+esUno  _            = False
+
+
+data NExp = Var Variable | NCte Int | NBOp NBinOp NExp NExp 
+data NBinOp = Add | Sub | Mul' | Div | Mod | Pow 
+type Variable = String
+
+foldNExp :: (NBinOp -> b -> b -> b) -> (Int -> b) -> (Variable -> b) -> NExp -> b
+foldNExp f g h (Var variable)           = h variable
+foldNExp f g h (NCte int)               = g int 
+foldNExp f g h (NBOp binOp nExp1 nExp2) = f binOp (foldNExp f g h nExp1) (foldNExp f g h nExp2)
+
+recNExp :: (NBinOp -> NExp -> NExp -> b -> b -> b) -> (Int -> b) -> (Variable -> b) -> NExp -> b
+recNExp f g h = appDup (foldNExp f' g' h')
+ where h' var _ = h var
+       g' int _ = g int
+       f' op r1 r2 (NBOp op' nExp1 nExp2) = f op' nExp1 nExp2 (r1 nExp1) (r2 nExp2)
+
+appDup f x = f x x
 
