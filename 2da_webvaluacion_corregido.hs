@@ -1,4 +1,5 @@
 --Un elemento de ejemplo de HSON es el siguiente
+import Data.Char
 
 ejH = HMap [ ("name"        , HValue "Gobstones-Auth-Client")
            , ("version"     , HValue "0.1.0A")
@@ -6,7 +7,7 @@ ejH = HMap [ ("name"        , HValue "Gobstones-Auth-Client")
                 HList [ HMap [ ("dependsOn", HValue "@Babel/Code-Frame")
                              , ("version"  , HValue "7.8.3B") 
                              ]
-                      , HOp (map id) 
+                      , HOp (map toUpper) 
                             (HMap [ ("dependsOn", HValue "@babel/compat")
                                   , ("version"  , HValue "7.11.0a") 
                                  ])
@@ -30,21 +31,13 @@ Por ejemplo:   fields ejH = [ "name", "version", "dependencies"
 						  
 -}
 
-data HSON a = HValue a | HList [HSON a] | HMap  [(String, HSON a)] | HOp (a -> a) (HSON a)
+data HSON a = HValue a | HList [HSON a] | HMap  [(String, HSON a)] | HOp (a -> a) (HSON a) deriving Show
 
 fields::HSON a -> [ String ] 
 fields (HValue a) = []
 fields (HList hs) = concatMap fields hs 
-fields (HMap ps)  = arrPairToStr ps 
+fields (HMap ps)  = concat(map fst ps : map (fields.snd) ps)
 fields (HOp f e)  = fields e 
-
-arrPairToStr :: [(String, HSON a)] -> [String]
-arrPairToStr [p] = fst p : fields (snd p)
-arrPairToStr (p:ps) = fst p : fields (snd p) ++ arrPairToStr ps
-
-arrToStr :: [HSON a] -> [String]
-arrToStr [h] = fields h
-arrToStr (h:hs) = fields h ++ arrToStr hs
 
 
 -- Ej 2
@@ -57,12 +50,8 @@ values ejH = [ "Gobstones-Auth-Client", "0.1.0A"
 values :: HSON a -> [a]
 values (HValue a) = [a]
 values (HList hs) = concatMap values hs 
-values (HMap ps)  = obtainValues ps 
-values (HOp f e)  = values e
-
-obtainValues::[(String, HSON a)] -> [a]
-obtainValues [] = []
-obtainValues (p:ps) = values (snd p) ++ obtainValues ps
+values (HMap ps)  = concatMap (values.snd) ps 
+values (HOp f e)  = map f (values e)
 
 
 -- Ej 3
@@ -71,13 +60,10 @@ Por ejemplo:   depth ejH = 5-}
 
 depth :: HSON a -> Int
 depth (HValue a) = 0
-depth (HList hs) = 1 + sum (map depth hs)
-depth (HMap ps)  = 1 + obtainDepth ps
+depth (HList hs) = 1 + foldr max 0 (map depth hs)
+depth (HMap ps)  = 1 + foldr max 0 (map (depth.snd) ps)
 depth (HOp f e)  = 1 + depth e
 
-obtainDepth::[(String, HSON a)] -> Int
-obtainDepth [] = 0
-obtainDepth (p:ps) = depth (snd p) + obtainDepth ps
 
 {- Ej 4 
 
@@ -91,13 +77,8 @@ Por ejemplo:   nroFields ejH = 7
 nroFields :: HSON a -> Int
 nroFields (HValue a) = 0
 nroFields (HList hs) = sum (map nroFields hs)
-nroFields (HMap ps)  = obtainFields ps
+nroFields (HMap ps)  = 1 + sum (map (nroFields.snd) ps)
 nroFields (HOp f e)  = nroFields e
-
-obtainFields::[(String, HSON a)] -> Int
-obtainFields [] = 0
-obtainFields (p:ps) = 1 + nroFields (snd p) + obtainFields ps
-
 
 
 -- Ej 5
@@ -122,23 +103,9 @@ Por ejemplo:
 mapH :: (a->a) -> HSON a -> HSON a
 mapH f (HValue a) = HValue (f a)
 mapH f (HList hs) = HList (map (mapH f) hs)
-mapH f (HMap ps)  = applyFunPairs f ps
+--mapH f (HMap ps)  = HMap (map fst ps, map (mapH f) (snd ps))
+mapH f (HMap mhs) = HMap (map (\(k,v) -> (k, mapH f v)) mhs)
 mapH f (HOp f' e)  = HOp f' (mapH f e)
-
-applyFunPairs:: (a->a) -> [(String, HSON a)] -> HSON a
-applyFunPairs f [p] =  mapH f (snd p)
-applyFunPairs f (p:ps) =  applyFunPairs f ps
-
-
-{-applyTransf :: (Name, Content -> Content) -> FileSystem -> FileSystem
-applyTransf (nom, fcont) =
-    foldFS (\nom' cont ->
-              if nom == nom'
-                 then File nom' (fcont cont)
-                 else File nom' cont) 
-           (\nom' rs   -> Folder nom rs)
-		   
--}
 
 
 --Ej 6
@@ -152,7 +119,7 @@ normH (HOp f e)  = normHOp f (normH e)
 normHOp::(a->a) -> HSON a -> HSON a
 normHOp f (HValue a) = HValue (f a)
 normHOp f (HList hs) = HList hs
-normHOp f (HMap ps) = applyFunPairs f ps
+--normHOp f (HMap ps) = f ps
 normHOp f e = mapH f e
 
 -- Ej 7 definir fold

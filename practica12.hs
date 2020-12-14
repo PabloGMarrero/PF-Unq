@@ -547,7 +547,7 @@ gtree = GNode 1 [GNode 2 [GNode 5 [], GNode 6 []
 -}
 
 
-type Name = String
+{-type Name = String
 type Content = String
 type Path = [Name]
 data FileSystem = File Name Content | Folder Name [FileSystem] deriving Show
@@ -555,16 +555,6 @@ data FileSystem = File Name Content | Folder Name [FileSystem] deriving Show
 foldFS :: (Name -> Content -> b) -> (Name -> c -> b) -> ( [b] -> c) -> FileSystem -> b
 foldFS f g h (File n c ) = f n c
 foldFS f g h (Folder n fs) =  g n (h (map (foldFS f g h) fs)) 
-
-{-
-foldFS0::(a -> [b] -> b) -> FileSystem a -> b
-foldFS0 f (File n c) = 
-foldFS0 f (Folder n fs) = f e (map (foldFS0 f) ts) 
-
-foldFS:: (Name -> c -> b) -> ([b] -> c) -> FileSystem a -> b
-foldFS g f (File n c) = 
-foldFS g f (Folder n fs) = g e (f (map (foldFS g f) xs))
--}
 
 recFS :: (Name -> Content -> b) -> (Name -> c -> b) -> ( [FileSystem] -> [b] -> c) -> FileSystem -> b
 recFS f g h (File n c ) = f n c
@@ -595,7 +585,42 @@ mapContents :: (Content -> Content) -> FileSystem -> FileSystem
 --mapContents f (Folder n fs) = Folder n (map (mapContents f) fs)
 mapContents f = foldFS (\n c -> File n (f c) ) (\n rfs ->Folder n rfs) id
 
+-}
 
+type Name = String
+type Content = String
+type Path = [Name]
+data FileSystem = File Name Content | Folder Name [FileSystem] deriving Show
+
+fs = Folder "Juegos" [File "WOW" "wow1", File "Cod" "cod2", Folder "Nuevos" [File "Cyberpunk" "2020cp"] ]
+
+foldFS::(Name -> Content -> b)-> (Name -> c -> b) -> ([b] -> c)  -> FileSystem -> b
+foldFS fn ff fg (File n c) = fn n c
+foldFS fn ff fg (Folder n fss) = ff n (fg (map (foldFS fn ff fg) fss))
+
+foldFS0::(Name -> Content -> b)-> (Name -> [b] -> b)  -> FileSystem -> b
+foldFS0 fn ff (File n c) = fn n c
+foldFS0 fn ff (Folder n fss) = ff n (map (foldFS0 fn ff ) fss)
+
+foldFS1::(Name -> Content -> b) -> (Name -> c -> b) -> (b -> c -> c) -> c -> FileSystem -> b
+foldFS1 fn ff fe fx (File n c) = fn n c
+foldFS1 fn ff fe fx (Folder n fss) = ff n (foldr fe fx (map (foldFS1 fn ff fe fx) fss))
+
+
+amountOfFiles :: FileSystem -> Int
+amountOfFiles = foldFS (\n c -> 1) (\n c -> c) sum
+
+find :: Name -> FileSystem -> Maybe Content
+--find nom = foldFS0 (\nom' cont -> if nom == nom' then Just cont else Nothing) (\nom' rs -> firstMaybe rs)
+find nom = foldFS (\nom' cont -> if nom == nom' then Just cont else Nothing) (\nom' rs -> firstMaybe rs) id
+
+firstMaybe :: [Maybe a] -> Maybe a
+firstMaybe = foldr (\x r -> case x of
+                              Nothing -> r
+                              Just _  -> x) Nothing
+							  
+pathOf :: Name -> FileSystem -> Path
+pathOf nm = foldFS (\n c -> if n== nm then [n] else []) (\n rc -> n : concat rc ) id
 
 --- EXTRA 
 
@@ -628,9 +653,9 @@ simpG (Constante n) = Constante n
 simpG (ApplyOp op exs) = simpOpG op (map simpG exs)
 
 simpOpG:: OpG -> [ExpG] -> ExpG
---simpOpG Sumatoria ex = Sumatoria (filter esCero ex)
---simpOpG Productoria ex = Productoria (filter esUno ex)
-simpOpG Promedio ex = Promedio ex
+simpOpG Sumatoria ex = ApplyOp Sumatoria (filter esCero ex)
+simpOpG Productoria ex = ApplyOp Productoria (filter esUno ex)
+simpOpG Promedio ex = ApplyOp Promedio ex
 
 esCero:: ExpG -> Bool
 esCero (Constante 0) = True
