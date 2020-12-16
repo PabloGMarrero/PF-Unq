@@ -251,3 +251,5 @@ PROPIEDAD (distributividad de length sobre (++)):
 PROPIEDAD (map conserva length):
         para todo f. para todo xs. length (map f xs) = length xs
 -}
+
+
