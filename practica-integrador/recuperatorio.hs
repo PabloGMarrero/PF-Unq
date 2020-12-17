@@ -44,10 +44,14 @@ values (HOp f h)  = map f (values h)
 -- dada una query y una base de datos devuelve el resultado de la consulta sobre dicha base de datos.
 --Puede resultar útil definir una función auxiliar proj :: [String] -> HSON a -> HSON a para manejar los casos de las proyecciones.
 evalQ :: QueryHDB a -> HongoDB a -> HongoDB a
-evalQ (Project ss q)     h = map (proj ss) (evalQ q h)
-evalQ (AnySatisfies p q) h = (if anyQ p (evalQ q h) then (h++) else id) (evalQ q h) --if anyQ p (evalQ q h) then h ++ (evalQ q h) else (evalQ q h)
-evalQ (AllSatisfies p q) h = (if allQ p (evalQ q h) then (h++) else id) (evalQ q h) --if allQ p (evalQ q h) then h ++ (evalQ q h) else (evalQ q h)
-evalQ This               h = h
+evalQ (Project vl q) hdb = map (proj vl) (evalQ q hdb)        
+evalQ (AnySatisfies f q) hdb = filter (\x -> any f (values x) ) (evalQ q hdb)
+evalQ (AllSatisfies f q) hdb = filter (\x -> all f (values x) ) (evalQ q hdb)
+evalQ (This) hdb = hdb
+--evalQ (Project ss q)     h = map (proj ss) (evalQ q h)
+--evalQ (AnySatisfies p q) h = (if anyQ p (evalQ q h) then (h++) else id) (evalQ q h) --if anyQ p (evalQ q h) then h ++ (evalQ q h) else (evalQ q h)
+--evalQ (AllSatisfies p q) h = (if allQ p (evalQ q h) then (h++) else id) (evalQ q h) --if allQ p (evalQ q h) then h ++ (evalQ q h) else (evalQ q h)
+--evalQ This               h = h
 
 anyQ::(a -> Bool) -> HongoDB a -> Bool
 anyQ p h = any p (concatMap values h)
