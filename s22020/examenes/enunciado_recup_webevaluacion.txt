@@ -1,0 +1,140 @@
+1)
+Sean los siguientes tipos para modelar una base de datos
+
+data QueryHDB a = Project [String] (QueryHDB a)
+                | AnySatisfies (a -> Bool) (QueryHDB a)
+                | AllSatisfies (a -> Bool) (QueryHDB a)
+                | This
+type HongoDB a = [HSON a]
+data HSON a = HValue a
+            | HList [HSON a]
+            | HMap [(String, HSON a)]
+            | HOp (a -> a) (HSON a)
+Un elemento de ejemplo de HSON es el siguiente
+
+ejH = HMap [ ("name" , HValue "Gobstones-Auth-Client")
+           , ("version" , HValue "0.1.0A")
+           , ("dependencies",
+               HList [ HMap [ ("dependsOn", HValue "@Babel/Code-Frame")
+                            , ("version" , HValue "7.8.3B")
+                            ]
+                     , HOp (map toUpper)
+                           (HMap [ ("dependsOn", HValue "@babel/compat")
+                                 , ("version" , HValue "7.11.0a")
+                                 ])
+                     ])
+           ]
+que representa al JSON
+
+      { "name": "Gobstones-Auth-Client"
+      , "version": "0.1.0A"
+      , "dependencies": [ { "dependsOn": "@Babel/Code-Frame"
+                          , "version": "7.8.3B" }
+                        , { "dependsOn": "@BABEL/COMPAT"
+                          , "version": "7.11.0A" }
+                        ]
+      }
+Considerar la función values sobre HSON:
+
+values :: HSON a -> [a]
+values (HValue x) = [x]
+values (HList hs) = concatMap values hs
+values (HMap khs) = concatMap (values . snd) khs
+values (HOp f h)  = map f (values h)
+
+ENUNCIADO
+Escribir una función evalQ :: QueryHDB a -> HongoDB a -> HongoDB a, que dada una query y una base de datos devuelve el resultado de la consulta sobre dicha base de datos.
+Puede resultar útil definir una función auxiliar proj :: [String] -> HSON a -> HSON a para manejar los casos de las proyecciones.
+
+EJEMPLOS:
+
+query1 = Project ["version", "dependencies"] This
+query2 = AnySatisfies (any isLower) This
+
+evalQ query1 [ejH] = -- Solamente los fields que están entre los elegidos
+     [ HMap [ ("version" , HValue "0.1.0A")
+            , ("dependencies",
+                HList [ HMap [ ("version" , HValue "7.8.3B") ]
+                      , HOp (map toUpper)
+                            (HMap [ ("version" , HValue "7.11.0a") ])
+                      ])
+            ]
+     ]
+
+evalQ query2 [ejH, evalQ query1 ejH] = [ ejH ]
+   -- El primero NO se elimina porque tiene algún value con alguna minúscula
+   -- El segundo se elimina, porque NO tiene un value con algún minúscula
+   
+2)
+Sean los siguientes tipos para modelar una base de datos
+
+data QueryHDB a = Project [String] (QueryHDB a)
+                | AnySatisfies (a -> Bool) (QueryHDB a)
+                | AllSatisfies (a -> Bool) (QueryHDB a)
+                | This
+type HongoDB a = [HSON a]
+data HSON a = HValue a
+            | HList [HSON a]
+            | HMap [(String, HSON a)]
+            | HOp (a -> a) (HSON a)
+ENUNCIADO
+Escribir una función normQ :: QueryHDB a -> QueryHDB a, que normaliza una consulta a la base de datos. Una consulta está normalizada si no tiene proyecciones consecutivas, ni predicados de satisfacción universal anidados, ni predicados de satisfacción existencial anidados.
+
+
+
+
+3)
+Sean los siguientes tipos para modelar una base de datos
+
+data QueryHDB a = Project [String] (QueryHDB a)
+                | AnySatisfies (a -> Bool) (QueryHDB a)
+                | AllSatisfies (a -> Bool) (QueryHDB a)
+                | This
+type HongoDB a = [HSON a]
+data HSON a = HValue a
+            | HList [HSON a]
+            | HMap [(String, HSON a)]
+            | HOp (a -> a) (HSON a)
+
+
+Considerar las siguientes funciones sobre HSON:
+
+fields :: HSON a -> [String]
+fields (HValue x) = []
+fields (HList hs) = concatMap fields hs
+fields (HMap khs) = map fst khs ++ concatMap (fields . snd) khs
+fields (HOp f h)   = fields h
+
+nroFields :: HSON a -> Int
+nroFields (HValue x) = 0
+nroFields (HList hs) = sum (map nroFields hs)
+nroFields (HMap khs) = length khs + sum (map (nroFields . snd) khs)
+nroFields (HOp f h)  = nroFields h
+
+ENUNCIADO
+Demostrar que se cumple la siguiente propiedad: length . fields = nroFields.
+Puede resultar útil considerar los siguientes lemas y propiedades, que se pueden suponer ya demostrados.
+
+LEMA 1: para todo f. para todo g. para todo xs.
+          si se cumple que
+              para todo x en xs. f x = g x
+          entonces map f xs = map g xs
+
+LEMA 2: para todo f. (snd . (\(x,y) -> (x, f y))) = (f . snd)
+
+PROPIEDAD (fusión de map):
+        para todo f. para todo g. (map f . map g) = map (f . g)
+
+PROPIEDAD (length-concat):
+        para todo xss. length (concat xss) = sum (map length xss)
+
+PROPIEDAD (conmutación concat-map):
+        para todo f. para todo xss. concat (map (map f) xss) = map f (concat xss)
+
+PROPIEDAD (distributividad de length sobre (++)):
+        para todo xs. para todo ys. length (xs++ys) = length xs + length ys
+
+PROPIEDAD (map conserva length):
+        para todo f. para todo xs. length (map f xs) = length xs
+
+

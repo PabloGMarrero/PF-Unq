@@ -1,0 +1,276 @@
+1)
+Considerar el siguiente tipo de datos, HSON, que sirve para describir datos en Haskell similar a JSON pero con el agregado de poder realizar transformaciones
+
+data HSON a = HValue a
+            | HList [HSON a]
+            | HMap  [(String, HSON a)]
+            | HOp (a -> a) (HSON a)
+Un elemento de ejemplo de HSON es el siguiente
+
+ejH = HMap [ ("name"        , HValue "Gobstones-Auth-Client")
+           , ("version"     , HValue "0.1.0A")
+           , ("dependencies", 
+                HList [ HMap [ ("dependsOn", HValue "@Babel/Code-Frame")
+                             , ("version"  , HValue "7.8.3B") 
+                             ]
+                      , HOp (map toUpper) 
+                            (HMap [ ("dependsOn", HValue "@babel/compat")
+                                  , ("version"  , HValue "7.11.0a") 
+                                 ])
+                      ])
+           ]
+que representa al JSON
+
+      { "name": "Gobstones-Auth-Client"
+      , "version": "0.1.0A"
+      , "dependencies": [ { "dependsOn": "@Babel/Code-Frame"
+                          , "version": "7.8.3B"                }
+                        , { "dependsOn": "@BABEL/COMPAT"
+                          , "version": "7.11.0A"              }
+                        ]
+      }
+Definir la función
+       fields :: HSON a -> [ String ] 
+que dado un HSON describe la lista con los nombres de sus campos.
+Por ejemplo:   fields ejH = [ "name", "version", "dependencies"
+                          , "dependsOn", "version", "dependOn", "version" ]
+						  
+2)
+Considerar el siguiente tipo de datos, HSON, que sirve para describir datos en Haskell similar a JSON pero con el agregado de poder realizar transformaciones
+
+data HSON a = HValue a
+            | HList [HSON a]
+            | HMap  [(String, HSON a)]
+            | HOp (a -> a) (HSON a)
+Un elemento de ejemplo de HSON es el siguiente
+
+ejH = HMap [ ("name"        , HValue "Gobstones-Auth-Client")
+           , ("version"     , HValue "0.1.0A")
+           , ("dependencies", 
+                HList [ HMap [ ("dependsOn", HValue "@Babel/Code-Frame")
+                             , ("version"  , HValue "7.8.3B") 
+                             ]
+                      , HOp (map toUpper) 
+                            (HMap [ ("dependsOn", HValue "@babel/compat")
+                                  , ("version"  , HValue "7.11.0a") 
+                                 ])
+                      ])
+           ]
+que representa al JSON
+
+      { "name": "Gobstones-Auth-Client"
+      , "version": "0.1.0A"
+      , "dependencies": [ { "dependsOn": "@Babel/Code-Frame"
+                          , "version": "7.8.3B"                }
+                        , { "dependsOn": "@BABEL/COMPAT"
+                          , "version": "7.11.0A"              }
+                        ]
+      }
+Definir la función
+       values :: HSON a -> [a]
+que dado un HSON describe la lista con todos sus valores     
+Por ejemplo:   values ejH = [ "Gobstones-Auth-Client", "0.1.0A"
+                          , "@Babel/Code-Frame", "7.8.3B"
+                          , "@BABEL/COMPAT", "7.11.0A" ]
+						  
+3)
+Considerar el siguiente tipo de datos, HSON, que sirve para describir datos en Haskell similar a JSON pero con el agregado de poder realizar transformaciones
+
+data HSON a = HValue a
+            | HList [HSON a]
+            | HMap  [(String, HSON a)]
+            | HOp (a -> a) (HSON a)
+Un elemento de ejemplo de HSON es el siguiente
+
+ejH = HMap [ ("name"        , HValue "Gobstones-Auth-Client")
+           , ("version"     , HValue "0.1.0A")
+           , ("dependencies", 
+                HList [ HMap [ ("dependsOn", HValue "@Babel/Code-Frame")
+                             , ("version"  , HValue "7.8.3B") 
+                             ]
+                      , HOp (map toUpper) 
+                            (HMap [ ("dependsOn", HValue "@babel/compat")
+                                  , ("version"  , HValue "7.11.0a") 
+                                 ])
+                      ])
+           ]
+que representa al JSON
+
+      { "name": "Gobstones-Auth-Client"
+      , "version": "0.1.0A"
+      , "dependencies": [ { "dependsOn": "@Babel/Code-Frame"
+                          , "version": "7.8.3B"                }
+                        , { "dependsOn": "@BABEL/COMPAT"
+                          , "version": "7.11.0A"              }
+                        ]
+      }
+Definir la función
+       depth :: HSON a -> Int
+que dado un HSON describe la profundidad del mismo.
+Por ejemplo:   depth ejH = 5
+
+4)
+Considerar el siguiente tipo de datos, HSON, que sirve para describir datos en Haskell similar a JSON pero con el agregado de poder realizar transformaciones
+
+data HSON a = HValue a
+            | HList [HSON a]
+            | HMap  [(String, HSON a)]
+            | HOp (a -> a) (HSON a)
+Un elemento de ejemplo de HSON es el siguiente
+
+ejH = HMap [ ("name"        , HValue "Gobstones-Auth-Client")
+           , ("version"     , HValue "0.1.0A")
+           , ("dependencies", 
+                HList [ HMap [ ("dependsOn", HValue "@Babel/Code-Frame")
+                             , ("version"  , HValue "7.8.3B") 
+                             ]
+                      , HOp (map toUpper) 
+                            (HMap [ ("dependsOn", HValue "@babel/compat")
+                                  , ("version"  , HValue "7.11.0a") 
+                                 ])
+                      ])
+           ]
+que representa al JSON
+
+      { "name": "Gobstones-Auth-Client"
+      , "version": "0.1.0A"
+      , "dependencies": [ { "dependsOn": "@Babel/Code-Frame"
+                          , "version": "7.8.3B"                }
+                        , { "dependsOn": "@BABEL/COMPAT"
+                          , "version": "7.11.0A"              }
+                        ]
+      }
+Definir la función
+       nroFields :: HSON a -> Int
+que dado un HSON describe la cantidad de campos que tiene el mismo.
+Por ejemplo:   nroFields ejH = 7
+
+
+5)
+Considerar el siguiente tipo de datos, HSON, que sirve para describir datos en Haskell similar a JSON pero con el agregado de poder realizar transformaciones
+
+data HSON a = HValue a
+            | HList [HSON a]
+            | HMap  [(String, HSON a)]
+            | HOp (a -> a) (HSON a)
+Un elemento de ejemplo de HSON es el siguiente
+
+ejH = HMap [ ("name"        , HValue "Gobstones-Auth-Client")
+           , ("version"     , HValue "0.1.0A")
+           , ("dependencies", 
+                HList [ HMap [ ("dependsOn", HValue "@Babel/Code-Frame")
+                             , ("version"  , HValue "7.8.3B") 
+                             ]
+                      , HOp (map toUpper) 
+                            (HMap [ ("dependsOn", HValue "@babel/compat")
+                                  , ("version"  , HValue "7.11.0a") 
+                                 ])
+                      ])
+           ]
+que representa al JSON
+
+      { "name": "Gobstones-Auth-Client"
+      , "version": "0.1.0A"
+      , "dependencies": [ { "dependsOn": "@Babel/Code-Frame"
+                          , "version": "7.8.3B"                }
+                        , { "dependsOn": "@BABEL/COMPAT"
+                          , "version": "7.11.0A"              }
+                        ]
+      }
+Definir la función
+       mapH :: (a->a) -> HSON a -> HSON a
+que dada una función de transformación de los elementos, describe el HSON que resulta de modificar los valores del HSON dado según la función dada. El resultado debe tener la misma estructura que el original (mismos constructores), y NO debe realizar más trabajo del necesario.
+Por ejemplo:    
+     mapH (map toLower) ejH = 
+       HMap [ ("name" , HValue "gobstones-auth-client")
+            , ("version" , HValue "0.1.0a")
+            , ("dependencies", 
+                 HList [ HMap [ ("dependsOn", HValue "@babel/code-frame")
+                              , ("version" , HValue "7.8.3b") ]
+                              , HOp (map toLower . map toUpper) 
+                                    (HMap [ ("dependsOn", HValue "@babel/compat") 
+                                          , ("version" , HValue "7.11.0a") 
+                                          ])
+                              ])
+            ] 
+
+
+
+ 
+6)
+Considerar el siguiente tipo de datos, HSON, que sirve para describir datos en Haskell similar a JSON pero con el agregado de poder realizar transformaciones
+
+data HSON a = HValue a
+            | HList [HSON a]
+            | HMap  [(String, HSON a)]
+            | HOp (a -> a) (HSON a)
+Un elemento de ejemplo de HSON es el siguiente
+
+ejH = HMap [ ("name"        , HValue "Gobstones-Auth-Client")
+           , ("version"     , HValue "0.1.0A")
+           , ("dependencies", 
+                HList [ HMap [ ("dependsOn", HValue "@Babel/Code-Frame")
+                             , ("version"  , HValue "7.8.3B") 
+                             ]
+                      , HOp (map toUpper) 
+                            (HMap [ ("dependsOn", HValue "@babel/compat")
+                                  , ("version"  , HValue "7.11.0a") 
+                                 ])
+                      ])
+           ]
+que representa al JSON
+
+      { "name": "Gobstones-Auth-Client"
+      , "version": "0.1.0A"
+      , "dependencies": [ { "dependsOn": "@Babel/Code-Frame"
+                          , "version": "7.8.3B"                }
+                        , { "dependsOn": "@BABEL/COMPAT"
+                          , "version": "7.11.0A"              }
+                        ]
+      }
+Definir la función
+       normH :: HSON a -> HSON a
+que dado un HSON, describe una versión normalizada de dicho HSON. La normalización consiste en eliminar todas las apariciones del constructor HOp.
+Por ejemplo:    
+  normH ejH = 
+       HMap [ ("name" , HValue "Gobstones-Auth-Client")
+            , ("version" , HValue "0.1.0A")
+            , ("dependencies", 
+                 HList [ HMap [ ("dependsOn", HValue "@Babel/Code-Frame")
+                              , ("version" , HValue "7.8.3B") 
+                              ]
+                       , HMap [ ("dependsOn", HValue "@BABEL/COMPAT")
+                              , ("version" , HValue "7.11.0A") 
+                              ]
+                       ])
+            ]
+
+
+
+
+
+7)
+Considerar el siguiente tipo de datos, HSON, que sirve para describir datos en Haskell similar a JSON pero con el agregado de poder realizar transformaciones
+
+data HSON a = HValue a
+            | HList [HSON a]
+            | HMap  [(String, HSON a)]
+            | HOp (a -> a) (HSON a)
+Definir la función
+       foldH :: (a -> b) -> ([b] -> b) -> ([(String, b)] -> b) -> ((a -> a) -> b -> b) -> HSON a -> b
+que describe la versión correspondiente al tipo dado del esquema de recursión sobre HSON.
+
+
+8)
+Considerar el siguiente tipo de datos, HSON, que sirve para describir datos en Haskell similar a JSON pero con el agregado de poder realizar transformaciones
+
+data HSON a = HValue a
+            | HList [HSON a]
+            | HMap  [(String, HSON a)]
+            | HOp (a -> a) (HSON a)
+y la función
+       foldH :: (a -> b) -> ([b] -> b) -> ([(String, b)] -> b) -> ((a -> a) -> b -> b) -> HSON a -> b
+definida en el punto anterior.
+
+Definir las 6 funciones de la primera parte utilizando foldH.
+
