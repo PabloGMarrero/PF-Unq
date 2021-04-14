@@ -1,0 +1,63 @@
+type Distance = Float
+type Angle    = Float
+data Command  = Go Distance         -- Moverse hacia adelante (no puede tener num negativos)
+              | Turn Angle          -- Girar en sentido antihorario
+              | Sit                 -- No hacer nada
+              | Command :#: Command -- Ejecutar los comandos en secuencia
+
+-- propiedades:
+-- Sit :#: p = p
+-- p :#: Sit = p
+-- a :#: (b :#: c) = (a :#: b) :#: c
+
+-- ej de commands
+--(Seq (Go 10) (Turn 90)) podés escribir (Go 10 :#: Turn 90)
+--((:#:) (Go 10) (Turn 90))
+
+--EJ: 
+comando = (Go 2 :#: Go 4 :#: Turn 6)
+comando2 = (Go 2 :#: Go 4 :#: Turn 5)
+
+--1: definir las siguientes funciones-----------------------------------------------------------
+split :: Command -> [Command]
+--proposito: dado un command, retorna una lista de commandos, sin Sit ni :#: ej:
+-- split (Go 4 :#: Sit :#: Turn 7) -> [Go 4, Turn 7]
+
+join :: [Command] -> Command
+-- proposito: dado una lista de commando individuales, retorna un Command
+-- ej join [Go 4, Turn 7] -> (Go 4 :#: Turn 7 :#: Sit)
+
+equivalent :: Command -> Command -> Bool
+-- proposito: teniendo en cuenta las propiedades dadas, dados 2 commandos decir si son equivalentes o no
+-- (pensar como usar las funciones anteriores)
+-- ej: (Sit :#: Go 4 :#: Turn 7 :#: Sit)
+
+--2: demostrar que -----------------------------------------------------------------------------
+
+-- nuevas propiedades:
+-- Sit = Go 0
+-- Sit = Turn 0
+-- Turn a :#: Turn b = Turn (a + b)
+-- Go a :#: Go b = Go (a + b)
+
+equivalent (join (split c)) c = True
+
+--(nos daban un lema para usar, pero el lema estaba en un formato "SI ... ENTONCES" y
+--para usarlo habia q hacer algo raro q no supe que era, el lema solo servía para el caso inductivo)
+
+--3: definir la siguiente funcion---------------------------------------------------------------
+
+
+optimize :: Command -> Command
+--proposito: dada las nuevas propiedades, definir una funcion que dado un command, retorna esa funcion sin:
+-- Sit, Go 0, Turn 0
+-- 2 Go adyacentes
+-- 2 Turn adyacentes
+-- ej: optimize (Go 10 :#: Sit  :#: Go 20   :#: Turn 35 :#: Go 0 :#: Turn 15 :#: Turn (-50)) -> Go 30
+
+--ayudas dadas:
+-- definir un join', q sería como el join del punrto 1, pero q no agregue un Sit al final
+-- definir SUBTAREAS:
+-- optimizeListForm :: [Command] -> [Command]
+-- optimizeGo :: Distance -> [Command] -> [Command]
+-- optimizeTurn :: Angle -> [Command] -> [Command]
