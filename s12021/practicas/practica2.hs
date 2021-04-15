@@ -74,7 +74,7 @@ apply first ::
 apply       :: ((a, b) -> a ) -> ((a, b) -> a)
 first       :: (a, b)   -> a                   
 ------------------------------------------------
-apply first :: ((a, b) -> a)
+apply first :: (a, b) -> a)
 
 
 b. first (swap, uflip)
