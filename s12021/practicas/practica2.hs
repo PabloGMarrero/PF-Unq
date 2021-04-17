@@ -82,7 +82,7 @@ b. first (swap, uflip)
 first               ::                     (a', b')                             -> a'
 (swap, uflip)       :: ((a, b) -> (b, a) , ((b, a) -> c ) -> ((a, b) -> c))                 a' = (a, b) -> (b, a)  ; b' = ((b, a) -> c ) -> ((a, b) -> c)
 ------------------------------------------------------------------------------
-first (swap, uflip) :: a
+first (swap, uflip) :: 
 
 
 
@@ -121,9 +121,14 @@ twice twice :: (a -> a)-> (a -> a)
 e. twice uflip
 
 twice       ::             (a' -> a')             -> (a' -> a') 
-uflip       :: ((b, a) -> c ) -> ((a, b) -> c)                       a' = 
+uflip       :: ((b, a) -> c ) -> ((a, b) -> c)                       a' = ((b, a) -> c ) ;  a'=  ((a, b) -> c) => a = b
 -----------------------------------------------------------
 twice uflip ::
+
+twice       ::  (((a, a) -> c) -> (a, a) -> c))  -> ((a, a) -> c) -> (a, a) -> c)) 
+uflip       :: ((a, a) -> c ) -> ((a, a) -> c)                                         a' = ((b, a) -> c ) ;  a'=  ((a, b) -> c) => a = b
+-----------------------------------------------------------
+twice uflip :: ((a, a) -> c) -> (a, a) -> c)) 
 
 
 f. twice swap
@@ -137,7 +142,7 @@ twice swap ::
 twice      ::((a, a) -> (a, a))  -> ((a, a)-> (a, a))
 swap       :: (a, a) -> (a, a)                            a' = (a, b) ; a' = (b, a)  ; a = b => a' = (a, a)
 ----------------------------------------------------------
-twice swap :: ((a, a)-> (a, a))
+twice swap :: (a, a)-> (a, a)
 
 g. uflip swap
 
@@ -150,7 +155,7 @@ uflip swap ::
 uflip      :: ((a, b) -> (b, a) ) -> ((b, a) -> (b, a))  
 swap       ::  (a, b) -> (b, a)                            b' = a ; a' = b  ; c' = (b, a)
 -------------------------------------------------
-uflip swap :: ((b, a) -> (b, a)) 
+uflip swap :: (b, a) -> (b, a)
 
 h. (twice twice) swap
 
@@ -225,7 +230,7 @@ c. No tiene tipo
 d. No tiene tipo
 e. Tiene tipo Int
 f. No tiene tipo 
-g. Tiene tipo Int-> Int
+g. No tiene tipo
 h. Tiene tipo ( (a, b), c) ?
 i. Tiene tipo (a->b) -> (a->b) 
  
