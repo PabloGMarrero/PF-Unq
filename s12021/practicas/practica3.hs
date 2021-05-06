@@ -101,7 +101,7 @@ d. compose (compose doble doble)
 e. (compose compose) doble doble
 -}
 
--- a) tiene tipo
+-- a) no tiene tipo, compose fst snd
 -- b) no tiene tipo, uncurry (curry snd)
 -- c) tiene tipo
 -- d) tiene tipo 
@@ -137,13 +137,13 @@ h. (a -> (b -> c)) -> ((a -> b) -> (a -> c))
 i. a -> (b -> a)
 
 a. (Int -> Int) -> Int -> Int
-b. (a -> (b -> c)) -> (a -> b) -> c
+b. (a -> b -> c) -> (a -> b) -> c
 c. (a -> b, c -> d) -> (a, c) -> (b, d)
 d. ((a, a) -> b) -> a -> b
-e. (a -> (b -> c)) -> b -> a -> c
+e. (a -> b -> c) -> b -> a -> c
 f. (a -> b) -> (a, a) -> (b, b)
 g. (a -> b, a -> c) -> a -> (b, c)
-h. (a -> (b -> c)) -> (a -> b) -> a -> c
+h. (a -> b -> c) -> (a -> b) -> a -> c
 i. a -> b -> a
 -}
 
