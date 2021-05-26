@@ -84,7 +84,7 @@ Demostración
     length (​(x:xs') ++ ​ys​)
     = (++).2
     length (x : (++) xs ys)
-    =
+    = length.2
     1 + length ((++) xs ys)
     = HI
     1 + length xs' + length ​ys

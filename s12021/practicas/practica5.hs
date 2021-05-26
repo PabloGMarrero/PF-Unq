@@ -220,6 +220,6 @@ data Exception = DivByZero | NotFound | NullPointer | Other String
 type ExHandler a = Exception -> a
 
 tryCatch :: MayFail a -> (a -> b) -> ExHandler b -> b
-tryCatch (Raise Exception) f g = g a
+tryCatch (Raise a) f g = g a
 tryCatch (Ok a) f g = f a
 
