@@ -128,7 +128,7 @@ Caso ind
 c- elem = any . (==)
 
 Por ppio de extensionalidad sea y un elemento cualquiera y ys una lista cualquiera
-elem y ys = (any . (==)) y ys?
+elem y ys = ((any . (==)) y) ys?
 
 Por def (.)
 elem y ys = any (y==) ys?
@@ -251,5 +251,362 @@ Caso ind
 		LLEGUÉ
 	
 	HI: elem x (xs' ++ xss') = elem x xs'  || elem x xss'!
+	
+e. para todo xs. para todo ys. subset xs ys = all (flip elem ys) xs
+
+Por inducción en la estructura de las listas, sea xs una lista cualquiera
+Caso base xs=[]
+	subset [] ys = all (flip elem ys) []?
+Caso ind xs = (x:xs')	
+	TI: subset (x:xs') ys = all (flip elem ys) (x:xs')?
+	HI: subset xs' ys = all (flip elem ys) xs'!
+	
+Demostración
+
+Caso base
+	LADO DER
+	all (flip elem ys) []
+	= all.1
+	True
+	= subset.1
+	subset [] ys
+	LLEGUÉ
+	
+Caso ind
+	LADO DER
+	all (flip elem ys) (x:xs')
+	= all.2
+	(flip elem ys) x && all (flip elem ys) xs'
+	= HI
+	(flip elem ys) x && subset xs' ys 
+	= def flip
+	elem x ys && subset xs' ys 
+	= subset.2
+	subset (x:xs') ys
+	LLEGUÉ
+
+f. all null = null . concat
+
+Por ppio de extensionalidad sea yss una lista cualquiera
+	all null yss = (null . concat) yss
+
+Por def (.)
+	all null yss = null (concat yss)
+	
+Por inducción en la estructura de las listas
+Caso base yss = []
+	all null [] = null (concat [])
+Caso ind yss = (xs:xss)
+	TI: all null (xs:xss) = null (concat (xs:xss))?
+	HI: all null xss = null (concat xss)!
+
+Demostración
+Caso base 
+	LADO IZQ
+	all null []
+	= all.1
+	True
+	
+	null (concat [])
+	= concat.1
+	null []
+	= def null
+	True
+
+Caso ind
+	Lado der
+	all null (xs:xss) 
+	= all.2
+	null xs && all null xss
+	= HI
+	null xs && null (concat xss)
+	
+	null (concat (xs:xss))
+	= concat.2
+	null (xs ++ concat xss)
+	= LEMA dist-null
+	null xs && null (concat xss)
+	
+	
+	LEMA dist-null 
+		null (xs ++ xs') = null xs && null xs'
+	Por ppio inducción en la estructura de xs
+	Caso base xs = []
+		null ([] ++ xs') = null [] && null xs'
+	Caso ind xs= (x:xs'')
+		TI: null ((x:xs'') ++ xs') = null (x:xs'') && null xs'!
+		HI: null (xs'' ++ xs') = null xs'' && null xs'
+		
+	Demostración
+	Caso base
+		null ([] ++ xs')
+		= (++).1
+		null xs'
+		= bool
+		True && null xs'
+		= def null
+		null [] && null xs'
+		LLEGUÉ
+		
+	Caso ind
+		LADO IZQ
+		null ((x:xs'') ++ xs') 
+		= (++)
+		null (x : (++) xs'' xs')
+		= def null
+		False
+	
+		null (x:xs'') && null xss'
+		= def null
+		False && null xss'
+		= bool
+		False
+		
+g. length = length . reverse
+
+Por ppio de extensionalidad sea ys una lista cualquiera 
+	length ys = (length . reverse) ys
+Por def de (.)
+	length ys = length (reverse ys)
+
+Pro ppio de inducción en la estructura de listas
+Caso base ys=[]
+	length [] = length (reverse [])
+Caso ind ys=(x:xs)
+	TI: length (x:xs) = length (reverse (x:xs) )?
+	HI: length xs = length (reverse xs)!
+	
+Demostración
+Caso base
+	LADO DER
+	length (reverse [])
+	= reverse.1
+	length []
+	
+	LLEGUÉ
+	
+Caso ind
+	LADO DER
+	length (reverse (x:xs) )
+	= reverse.2
+	length (reverse xs ++ [x])
+	= LEMA length-(++) demostrado en 2.a
+	length reverse xs + length [x]
+	= HI
+	length xs + length [x]
+	= def length
+	length xs + 1
+	= conmutativa
+	1 + length xs
+	= length.2	
+	length (x:xs) 
+	
+	LLEGUÉ
+	
+h. para todo xs. para todo ys.
+		reverse (xs ++ ys) = reverse ys ++ reverse xs
+		
+Por ppio de inducción en la estructura de las listas, sea xs una lista cualquiera
+Caso base xs =[]
+	reverse ([] ++ ys) = reverse ys ++ reverse []
+Caso ind xs =(x:xs')
+	TI: reverse ((x:xs') ++ ys) = reverse ys ++ reverse (x:xs')?
+	HI: reverse (xs' ++ ys) = reverse ys ++ reverse xs'!
+	
+Demostración
+Caso base
+	reverse ([] ++ ys) 
+	= (++).1
+	reverse ys
+
+	
+	reverse ys ++ reverse []
+	= reverse.1
+	reverse ys ++ []
+	= (++).1
+	reverse ys
+	
+Caso ind
+	LADO DER
+	reverse ys ++ reverse (x:xs')
+	= reverse.2
+	reverse ys ++ reverse xs' ++ [x]
+
+	
+	LADO IZQ
+	reverse ((x:xs') ++ ys) 
+	= (++).2
+	reverse (x : xs' ++ ys)
+	= reverse.2
+	reverse (xs' ++ ys) ++ [x]
+	= HI
+	reverse ys ++ reverse xs' ++ [x]
+	
+	LLEGUÉ
+
 -}
+
+
+------------------------------------- SECCION II
+
+-- Ejercicio 1: dada la estructura
+
+data N = Z | S N
+
+-- a. definir las funciones
+
+evalN :: N -> Int
+evalN Z = 0
+evalN (S n) = 1 + evalN n
+
+addN :: N -> N -> N
+addN Z n = n
+addN (S n) n2 = S (addN n n2)
+
+prodN :: N -> N -> N
+prodN Z n =
+prodN (S n) n2 = addN n2 (prodN n n2)
+
+int2N :: Int -> N
+int2N 0 = Z
+int2N n = S (int2N (n-1))
+
+
+
+
+
+-- b. demostrar
+{-
+
+i. para todo n1. para todo n2.
+	evalN (addN n1 n2) = evalN n1 + evalN n2
+	
+Por ppio de inducción en la estructura de N, sea n1 un N cualquiera
+Caso base n1 = Z
+	evalN (addN Z n2) = evalN Z + evalN n2
+	
+Caso ind n1 = S n
+	TI: evalN (addN (S n) n2) = evalN (S n) + evalN n2?
+	HI: evalN (addN n n2) = evalN n + evalN n2!
+	
+Demostración
+
+Caso base
+	evalN (addN Z n2) 
+	= addN.1
+	evalN n2
+	= aritmetica
+	0 + evalN n2
+	= evalN.1
+	evalN Z + evalN n2
+
+Caso ind
+	LADO IZQ
+	evalN (addN (S n) n2) 
+	= addN.2
+	evalN (S (addN n n2))
+	= evalN
+	1 + evalN (addN n n2)
+	
+	LADO DER
+	evalN (S n) + evalN n2
+	= evalN.2
+	1 + evalN n + evalN n2
+	= HI
+	1 + evalN (addN n n2)
+	
+
+ii. para todo n1. para todo n2.
+	evalN (prodN n1 n2) = evalN n1 * evalN n2
+	
+Por ppio de inducción en la estructura de n1
+-Caso base n1 = Z ​   evalN (prodN ​Z​​ n2​) =​ evalN ​Z​ * evalN ​n2
+-Caso ind n1 = (S n) evalN (prodN ​(S n) ​​n2​) =​ evalN ​(S n)​ * evalN ​n2
+		HI: evalN (prodN ​n ​​n2​)=​ evalN ​n * evalN ​n2
+		
+Demostración
+- Caso base
+	evalN (prodN ​Z​​ n2​)
+	=prodN.1
+	evalN Z
+	= evalN.1
+	0
+	
+	evalN ​Z​ * evalN ​n2
+	= evalN.1
+	0 * evalN ​n2
+	= aritmetica
+	0
+	
+- Caso ind
+	evalN (prodN ​(S n) ​​n2​)
+	= prodN.2
+	evalN (addN n2 (prodN n n2))
+	= por prop b.i
+	evalN n2 + evalN (prodN n n2)
+	= HI
+	evalN n2 + (evalN ​n * evalN ​n2)
+
+	evalN ​(S n)​ * evalN ​n2
+	= evalN.2
+	(1 + evalN n) * evalN ​n2
+	= aritmetica
+	evalN ​n2 + (evalN ​n * evalN ​n2)
+	
+iii. int2N . evalN = id
+
+Por ppio de extensionalidad sea un n cualquiera
+(int2N . evalN) n ​=​ id n
+Por def (.)
+int2N (evalN n) = id n
+
+Por ppi de inducción en la estructura de N
+
+- Caso base n = Z     
+	int2N (evalN Z) = id Z
+- Caso ind n = (S n)  
+	TI: int2N (evalN (S n)) = id (S n)
+	HI: int2N (evalN n) = id n
+
+Demostración
+- Caso base
+	int2N (evalN Z)
+	= evalN.1
+	int2N 0
+	= int2N.1
+	Z
+	= def id
+	id Z
+	
+- Caso ind
+	int2N (evalN (S n)) 
+	= evalN.2
+	int2N (1 + evalN n)
+	=int2N.1
+	S ( int2N (1 + evalN n -1) )
+	= aritmetica
+	S ( int2N (evalN n ) )
+	= HI 
+	S ( id n )
+	= def id
+	S n
+	= def id
+	id (S n)
+
+iv. evalN . int2N = id
+
+Por ppio de extensionalidad sea n un N cualquiera
+	(evalN . int2N ) n = id n
+Por def (.)
+	evalN (int2N  n) = id n
+
+Por ppio de inducción en la estructura de N, sea n un N cualquiera
+
+-}
+
+int2N::Int->N
+int2N 0 = Z
+int2N n = S (int2N (n-1))
+
+
 

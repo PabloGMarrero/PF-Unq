@@ -326,19 +326,19 @@ Demostración
 		null xss''
 		
 	-Caso xs = (zs:zss)
-	null (zs:zss) ++ xss'') = null (zs:zss) && null xss''
-	
-	null ((zs:zss) ++ xss'')
-	= ++.2
-	null (zs : (++) xss'' zss)
-	= null.2
-	False
-	
-	null (zs:zss) && null xss''
-	= null.1
-	False && null xss''
-	= def &&
-	False
+		null (zs:zss) ++ xss'') = null (zs:zss) && null xss''
+		
+		null ((zs:zss) ++ xss'')
+		= ++.2
+		null (zs : (++) xss'' zss)
+		= null.2
+		False
+		
+		null (zs:zss) && null xss''
+		= null.1
+		False && null xss''
+		= def &&
+		False
 	
 
 g) length ​=​ length . reverse
