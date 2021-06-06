@@ -600,13 +600,103 @@ Por ppio de extensionalidad sea n un N cualquiera
 Por def (.)
 	evalN (int2N  n) = id n
 
-Por ppio de inducción en la estructura de N, sea n un N cualquiera
+Por ppio de inducción en la estructura de los numeros, sea n un numeros cualquiera
+
+Caso base n = 0​
+	evalN (int2N  0) = id 0
+Caso ind n = (n')
+	TI: evalN (int2N  (n')) = id (n')
+	HI: evalN (int2N  (n'-1)) = id (n'-1)
 
 -}
 
-int2N::Int->N
-int2N 0 = Z
-int2N n = S (int2N (n-1))
+--Seccion III
+
+--Ej 1
+
+data ExpA =Cte Int | Suma ExpA ExpA | Prod ExpA ExpA deriving Show 
+
+-- a. Implementar las siguientes funciones
+
+evalExpA::ExpA->Int
+evalExpA (Cte n) = n
+evalExpA (Suma e1 e2) = evalExpA e1 + evalExpA e2
+evalExpA (Prod e1 e2) = evalExpA e1 * evalExpA e2
+
+simplificarExpA::ExpA->ExpA
+simplificarExpA (Cte n) = Cte n
+simplificarExpA (Suma e1 e2) = simpSumaExpA (simplificarExpA e1) (simplificarExpA e2)
+simplificarExpA (Prod e1 e2) = simpProdExpA (simplificarExpA e1) (simplificarExpA e2)
+
+simpSumaExpA::ExpA->ExpA-> ExpA
+simpSumaExpA (Cte 0) e2 = e2
+simpSumaExpA e1 (Cte 0) = e1
+
+simpProdExpA::ExpA->ExpA-> ExpA
+simpProdExpA (Cte 0) e2 = (Cte 0)
+simpProdExpA (Cte 1) e2 = e2
+simpProdExpA e1 (Cte 0) = (Cte 0)
+simpProdExpA e1 (Cte 1) = e1
+
+cantidadDeSumaCero :: ExpA -> Int
+cantidadDeSumaCero (Cte n) = 0
+cantidadDeSumaCero (Suma e1 e2) = unoSiEsSumaCero (cantidadDeSumaCero e1) + (cantidadDeSumaCero e2)
+cantidadDeSumaCero (Prod e1 e2) = cantidadDeSumaCero e1 + cantidadDeSumaCero e2
+
+unoSiEsSumaCero:: Int -> Int -> Int
+unoSiEsSumaCero	0 n = 1
+unoSiEsSumaCero n 0 = 1
+unoSiEsSumaCero n1 n2 = 0
+
+-- b. demostrar por inducción estructural las siguientes propiedades:
+
+{-
+i. evalExpA . simplificarExpA = evalExpA
+
+Por ppio de extensionalidad sea e un ExpA cualquiera
+	(evalExpA . simplificarExpA) e = evalExpA e
+Por def de (.)
+	evalExpA (simplificarExpA e )= evalExpA e
+	
+Por ppio de inducción en la estructura de e 
+
+Caso base: e = Cte n
+	evalExpA (simplificarExpA (Cte n )= evalExpA (Cte n )
+Caso ind1: e = Suma e1 e2
+	TI: evalExpA (simplificarExpA (Suma e1 e2) )= evalExpA (Suma e1 e2)
+	HI1: evalExpA (simplificarExpA e1)= evalExpA e1
+	HI2: evalExpA (simplificarExpA e2)= evalExpA e2
+Caso ind1: e = Prod e1 e2
+	TI: evalExpA (simplificarExpA (Prod e1 e2 ) = evalExpA (Prod e1 e2 )
+	HI1: evalExpA (simplificarExpA e1)= evalExpA e1
+	HI2: evalExpA (simplificarExpA e2)= evalExpA e2
+	
+Demostración
+
+Caso base
+	evalExpA (simplificarExpA (Cte n )
+	= simplificarExpA.1	
+	evalExpA (Cte n )
+	LLEGUÉ
+Caso ind
+	evalExpA (simplificarExpA (Suma e1 e2) )
+	= simplificarExpA.2
+	evalExpA (simpSumaExpA (simplificarExpA e1) (simplificarExpA e2))
+	= LEMA evalExpA-distributiva
+	evalExpA (simplificarExpA e1) + evalExpA (simplificarExpA e2))
+		
+	evalExpA (Suma e1 e2)
+	= evalExpA.1
+	evalExpA e1 + evalExpA e2
+	= HI
+	evalExpA (simplificarExpA e1) + evalExpA (simplificarExpA e2)
+	
+	LEMA evalExpA-distributiva
+	Caso e1 = Cte 0
+-}
 
 
+-- Ejercicio 2) Dada la siguiente representación de expresiones aritméticas
+data ExpS = CteS N | SumS ExpS ExpS | ProdS ExpS Exps
 
+--a. implementar las siguientes funciones por inducción estructural (o primitiva de ser necesario):

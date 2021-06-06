@@ -483,7 +483,7 @@ data AppList a = Single a | Append (AppList a) (AppList a) deriving Show
 --Ej 1
 lenAL::AppList a->Int
 lenAL (Single e) = 1 
-lenAL (Append a1 a2) = 1 + lenAL a1 + lenAL a2
+lenAL (Append a1 a2) = lenAL a1 + lenAL a2
 
 consAL::a->AppList a->AppList a
 consAL x (Single e) = Append (Single x) (Single e)
