@@ -159,7 +159,7 @@ any' :: (a -> Bool) -> [a] -> Bool
 any' f = foldr ( (||) . f) False 
 
 all'' :: (a -> Bool) -> [a] -> Bool
-all' f = foldr ( (&&) . f) False 
+all' f = foldr ( (&&) . f) True 
 
 countBy :: (a -> Bool) -> [a] -> Int
 countBy f = foldr (\x rx -> (if f x then 1 else 0) + rx) 0
