@@ -430,7 +430,7 @@ recGT0 :: (a -> [GTree a] -> [b] -> b) -> GTree a -> b
 recGT0 f (GNode x xs) = f x xs (map (recGT0 f) xs)
 
 --recGT1 :: (a -> c -> [GTree a] -> b) -> ([GTree a] -> b -> c -> c) -> c -> GTree a -> b
---recGT1 g f z (GNode e xs) = g e xs (foldr f z (map (recGT1 g f z) xs))
+--recGT1 g f z (GNode e xs) = g e xs (recr f z (map (recGT1 g f z) xs))
 
 recGT :: (a -> c -> [GTree a] -> b) -> ([b] -> c) -> GTree a -> b
 recGT g f (GNode e xs) = g e (f (map (recGT g f) xs)) xs

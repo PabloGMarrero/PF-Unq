@@ -358,27 +358,221 @@ scanr f e (x:xs) =  f x e : (scanr f e xs)
 a. para todo f. para todo g. map f . map g = map (f . g)
 
 Por ppio de extensionalidad sea xs una lista cualquiera
+	(map f . map g) xs = map (f . g) xs
 
+Por def (.)
+	map f (map g xs) = map f (g xs) 
 
-b. para todo f. para todo xs. para todo ys.
-map f (xs ++ ys) = map f xs ++ map f ys
+b. para todo f. para todo xs. para todo ys. map f (xs ++ ys) = map f xs ++ map f ys
+
+Por inducción en la estructura de xs 
+- Caso base xs = []
+	map f ([] ++ ys) = map f [] ++ map f ys
+	
+- Caso ind xs = (x:'xs)
+	TI: map f ((x:'xs) ++ ys) = map f (x:'xs) ++ map f ys
+	HI: map f ('xs ++ ys) = map f 'xs ++ map f ys
+	
+Demostración
+- Caso base
+	map f ([] ++ ys) 
+	= (++).1
+	map f ys
+	
+	map f [] ++ map f ys
+	= map.1
+	[] ++ map f ys
+	= (++).1
+	map f ys
+	
+- Caso ind
+	map f ((x:'xs) ++ ys) 
+	= (++).2
+	map f (x : (++) 'xs ys)
+	= map.2
+	f x : map f ((++) 'xs ys)
+	= sección opertadores
+	f x : map f ('xs ++ ys)
+	= HI
+	f x : map f 'xs ++ map f ys
+	
+	
+	map f (x:'xs) ++ map f ys
+	=map.2
+	f x : map f xs ++ map f ys
+
+	LLEGUÉ
+
 c. para todo f. concat . map (map f) = map f . concat
+
+Por ppio de extensionalidad sea xss una lista cualquiera
+	(concat . map (map f)) xss = (map f . concat) xss
+	
+Por def (.)
+	concat (map (map f) xss ) = map f (concat xss)
+	
+Por ppio de inducción en la estructura de xss
+- Caso base xss = []
+	concat (map (map f) [] ) = map f (concat [])
+- Caso ind xss = (xs:'xss)
+	TI: concat (map (map f) (xs:'xss) ) = map f (concat (xs:'xss))
+	HI: concat (map (map f) 'xss) = map f (concat 'xss)
+	
+Demostración
+- Caso base
+	concat (map (map f) [] ) 
+	= map.1
+	concat []
+	= concat.1
+	[]
+	
+	map f (concat [])
+	= concat.1
+	map f []
+	= map.1
+	[]
+	
+- Caso ind
+	concat (map (map f) (xs:'xss) ) 
+	= map.2
+	concat (map f xs : map (map f) 'xss )
+	= concat.2
+	map f xs ++ concat (map (map f) 'xss)
+	= HI
+	map f xs ++ map f (concat 'xss)
+	= por propiedad practica 11 ejercicio 8a
+	map f (xs ++ concat 'xss)
+	
+	map f (concat (xs:'xss))
+	= concat.2
+	map f (xs ++ concat 'xss)
+	
+	LLEGUÉ
+	
 d. foldr ((+) . suma') 0 = sum . map suma'
+
+Por ppio de extensionalidad sea ps una lista de pares de int cualquiera
+	foldr ((+) . suma') 0 ps = (sum . map suma') ps
+	
+Por def (.)
+	foldr ((+) . suma') 0 ps = sum (map suma' ps)
+
+Por ppio de inducción en la estructura de ps 
+- Caso base ps = []
+	foldr ((+) . suma') 0 [] = sum (map suma' [])
+- Caso ind ps = (p:'ps)
+	TI: foldr ((+) . suma') 0 (p:'ps) = sum (map suma' (p:'ps))
+	HI: foldr ((+) . suma') 0 'ps = sum (map suma' 'ps)
+	
+Demostración
+
+- Caso base
+	foldr ((+) . suma') 0 [] 
+	= foldr.1
+	0
+	
+	sum (map suma' [])
+	= map.1
+	sum []
+	= sum.1
+	0
+	
+- Caso ind
+	foldr ((+) . suma') 0 (p:'ps) 
+	= foldr.2
+	((+) . suma') p (foldr ((+) . suma') 0 'ps)
+	= HI
+	((+) . suma') p (sum (map suma' 'ps))
+	= por def (.)
+	suma' p + (sum (map suma' 'ps))
+	
+	sum (map suma' (p:'ps))
+	= map.2
+	sum (suma' p : map suma' 'ps)
+	= sum.2
+	suma' p +  sum (map suma' 'ps)
+	
+	LLEGUÉ
+
+
 e. para todo f. para todo z. foldr f z . foldr (:) [] = foldr f z
 f. para todo f. para todo z. para todo xs. para todo ys.
-foldr f z (xs ++ ys) = foldr f (foldr f z ys) xs
+	foldr f z (xs ++ ys) = foldr f (foldr f z ys) xs
 g. (+1) . foldr (+) 0 = foldr (+) 1
 h. para todo n. para todo f. many n f = foldr (.) id (replicate n f)
-siendo many 0 f = id
-many n f = f . many (n - 1)
+	siendo 
+	many 0 f = id
+	many n f = f . many (n - 1)
 i. para todo f. para todo xs. para todo ys.
-zipWith (f . swap) xs ys
-= map (uncurry f) (flip zip xs ys)
-j. (Desafío)
-para todo f. para todo g. para todo h. para todo z.
-si para todo x. para todo y. h (f x y) = g x (h y)
-entonces h . foldr f z = foldr g (h z)
-Dar un ejemplo de uso específico de esta propiedad.
+	zipWith (f . swap) xs ys = map (uncurry f) (flip zip xs ys)
+j. (Desafío) para todo f. para todo g. para todo h. para todo z.
+	si para todo x. para todo y. h (f x y) = g x (h y)
+	entonces h . foldr f z = foldr g (h z)
+		Dar un ejemplo de uso específico de esta propiedad.
 
+-}
+
+-- Ejercicio 9) Definir las siguientes funciones utilizando solamente foldr:
+
+sum :: [Int] -> Int
+--sum = foldr (\x rxs -> x + rxs) 0
+sum = foldr (+) 0
+
+length :: a -> Int
+sum = foldr (\x rxs -> 1 + rxs) 0
+
+map :: (a -> b) -> [a] -> [b]
+map f = foldr (\x rxs -> f x : rxs) []
+
+filter :: (a -> Bool) -> [a] -> [a]
+filter f = foldr (\x rxs -> (if f x then (x:) else id) rxs) []
+
+find :: (a -> Bool) -> [a] -> Maybe a
+find f = foldr (\x rxs -> if f x then Just x else rxs ) Nothing
+
+any :: (a -> Bool) -> [a] -> Bool
+--any f = foldr (\x rxs -> f x || rxs) False
+any f = foldr ((||) . f) False
+
+all :: (a -> Bool) -> [a] -> Bool
+--all f = foldr (\x rxs -> f x && rxs) True
+all f = foldr ((&&) . f) True
+
+countBy :: (a -> Bool) -> [a] -> Int
+--countBy f = foldr (\x rxs -> if f x then 1+rxs else rxs) 0
+--countBy f = foldr (\x rxs -> (if f x then succ else id) rxs) 0
+countBy f = foldr (\x rxs -> (if f x then 1 else 0) + rxs) 0
+
+partition :: (a -> Bool) -> [a] -> ([a], [a])
+--partition f = foldr (\x rps -> if f x then (x: fst rps, snd rps) else (fst rps, x: snd rps) ) ([], [])
+partition f = foldr g ([], [])
+ where g x r = if f x then (x: fst rps, snd rps) else (fst rps, x: snd rps)
+
+{-zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith f = foldr g h []
+ where g r
+
+scanr :: (a -> b -> b) -> b -> [a] -> [b]
+
+takeWhile :: (a -> Bool) -> [a] -> [a]
+take :: Int -> [a] -> [a]
+drop :: Int -> [a] -> [a]
+(!!) :: Int -> [a] -> a
+-}
+
+-- Ejercicio 10) Indicar cuáles de las siguientes expresiones tienen tipo, y para aquellas que lo tengan, decir cuál es ese tipo:
+{-
+
+a. filter id
+b. map (\x y z -> (x, y, z))
+c. map (+)
+d. filter fst
+e. filter (flip const (+))
+f. map const
+Página 3 de 4Programación Funcional
+g. map twice
+h. foldr twice
+i. zipWith fst
+j. foldr (\x r z -> (x, z) : r z) (const [])
 
 -}
